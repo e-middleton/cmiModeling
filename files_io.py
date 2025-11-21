@@ -29,16 +29,3 @@ def readGPS(filename) :
     colnames = ["station_ID", 'lon', 'lat', 'east_vel', 'north_vel', 'up_vel']
     gps = pd.read_table(filename, sep='\s+', header=None, names=colnames)
     return gps
-
-
-# parse a filename from the test parameters
-def getFilename(config) :
-    fileName = './_outputs/' + 'D' + str(config["planeDepth"]) + '_S'
-    if(config["spatiallyVariable"]) :
-        fileName = fileName + 'V_Testing/'
-    else:
-        fileName = fileName + 'U_Testing/'
-
-    fileName = fileName + str(config["results"]["testName"])
-
-    return fileName
