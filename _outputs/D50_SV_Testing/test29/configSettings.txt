@@ -1,0 +1,32 @@
+{
+    "cmi": {
+        "minLat": 34,
+        "minLon": 125
+    },
+    "cmiDepth": 40,
+    "constraint": {
+        "cmiEdge": 100.0,
+        "faultEdge": 10000.0
+    },
+    "inputs": {
+        "cmi": "horiz",
+        "fault": "japan.msh",
+        "gps": "cumulative_disp.txt"
+    },
+    "planeDepth": 50,
+    "results": {
+        "allDisp": true,
+        "dispSep": true,
+        "ratioFig": true,
+        "residFig": true,
+        "saveData": true,
+        "saveFigures": true,
+        "slipDist": true,
+        "testName": "test29"
+    },
+    "smoothing": {
+        "cmi": 5000000000000.0,
+        "fault": 100000000000000.0
+    },
+    "spatiallyVariable": true
+}
