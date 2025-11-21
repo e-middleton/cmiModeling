@@ -1,6 +1,7 @@
 # BEL Modeling
 The code in this repository is for inverting gps data for slip distributions on the bel (base of elastic layer) and on the subduction zone.
 In order to run the inversion, celeri https://github.com/brendanjmeade/celeri must be installed.
+A subset of the tests run has been included. Tests for a depth of 40 km with variable and uniform smoothing values as well as tests for 50km with variable and uniform smoothing values have been included in _outputs.
 
 ## Running Models
 There are currently two options supported for running models. The first option is to create a new model, and the second is to read in the results of an old model.
