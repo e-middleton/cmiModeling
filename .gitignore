@@ -1,0 +1,11 @@
+*.h5
+*.geo_unrolled
+*.png
+*.pdf
+clipped_fault.msh
+_outputsCMI*
+_outputsDiao1*
+_outputsDiao2*
+_outputsDiao3*
+_outputsDiao4*
+_outputsDiao5*
