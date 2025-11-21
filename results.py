@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import json
+import yaml
 
 
 def slipDist(estSlip, gps, fault, cmi, vecScale, slipDist=False, saveFigures=False) :
@@ -423,9 +424,8 @@ def numericalData(estSlip, predDisp, gps, allElemBegin, fault, cmi, saveData):
 
 # save current config settings for later reference
 def saveConfig(config):
-    with open("configSettings.txt", 'w') as file:
-        file.write(json.dumps(config, indent=4, sort_keys=True))
-
+    with open('configSettings.txt', 'w') as file:
+            yaml.dump(config, file, default_flow_style=False)
     return
 
 
