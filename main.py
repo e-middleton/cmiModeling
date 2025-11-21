@@ -5,7 +5,7 @@ from createMatrices import findEdgeElem, createDispSmoothMats, createIndexingLis
 import celeri
 from results import slipDist, displacements, residualPlot, numericalData, saveConfig, plotLikeDiao, afterslip
 import yaml, argparse
-from files_io import readMesh, readGPS, getFilename
+from files_io import readMesh, readGPS
 from runInversion import runInversion, assembleWeights, removeFaultContribution
 
 ### SET MODEL CHOICES ###
@@ -23,7 +23,7 @@ def parseArgs() :
     parser.add_argument("--gpsFile", type=str, metavar='', help="Override gps file")
 
     parser.add_argument("--oldResults", action='store_true', help='Process the results of a past test.')
-    parser.add_argument("--resultFile", type=str, metavar='', help='Directory for the old test results.')
+    parser.add_argument("--resultFolder", type=str, metavar='', help='Directory for the old test results.')
 
     parser.add_argument("--afterslipReinvert", action='store_true', help="Invert for cmi after removing fault afterslip displacements.")
     
@@ -33,7 +33,7 @@ def main() :
     args = parseArgs()
 
     if (args.oldResults or args.afterslipReinvert) :
-        with open(args.resultFile + '/configSettings.txt', 'r') as file:
+        with open(args.resultFolder + '/configSettings.txt', 'r') as file:
             config = yaml.safe_load(file)
     else: 
         with open(args.config, "r") as file :
@@ -104,20 +104,20 @@ def main() :
     # function automatically removes tensile rows and columns from the subduction zone matrix in disp mat
     # and it then removes the corresponding rows and columns of smoothing mat, leaving it as a square matrix
 
-    # faultDispMat, faultSmoothingMat = createDispSmoothMats(gps=gps, numTri=len(fault["lon1"]), meshes=[meshes[0]], isFault=True)
-    # horizDispMat, horizSmoothingMat = createDispSmoothMats(gps=gps, numTri=len(horiz["lon1"]), meshes=[meshes[1]])
+    faultDispMat, faultSmoothingMat = createDispSmoothMats(gps=gps, numTri=len(fault["lon1"]), meshes=[meshes[0]], isFault=True)
+    horizDispMat, horizSmoothingMat = createDispSmoothMats(gps=gps, numTri=len(horiz["lon1"]), meshes=[meshes[1]])
 
-    # # square matrix requires blocks of zeros to hold space
-    # upperRightBlock = np.zeros((len(faultSmoothingMat[0]), len(horizSmoothingMat[0])))
-    # lowerLeftBlock = np.zeros((len(horizSmoothingMat[0]), len(faultSmoothingMat[0])))
+    # square matrix requires blocks of zeros to hold space
+    upperRightBlock = np.zeros((len(faultSmoothingMat[0]), len(horizSmoothingMat[0])))
+    lowerLeftBlock = np.zeros((len(horizSmoothingMat[0]), len(faultSmoothingMat[0])))
 
-    # faultRow = np.hstack((faultSmoothingMat, upperRightBlock))
-    # cmiRow = np.hstack((lowerLeftBlock, horizSmoothingMat))
+    faultRow = np.hstack((faultSmoothingMat, upperRightBlock))
+    cmiRow = np.hstack((lowerLeftBlock, horizSmoothingMat))
 
-    # # stick together column wise
-    # dispMat = np.hstack((faultDispMat, horizDispMat))
-    # smoothingMat = np.vstack((faultRow, cmiRow))
-    dispMat, smoothingMat = createDispSmoothMats(gps, np.sum(n_tri), elemBegin, elemEnd, meshes)
+    # stick together column wise
+    dispMat = np.hstack((faultDispMat, horizDispMat))
+    smoothingMat = np.vstack((faultRow, cmiRow))
+    # dispMat, smoothingMat = createDispSmoothMats(gps, np.sum(n_tri), elemBegin, elemEnd, meshes)
 
     # *function should built-in test for flattened elements hopefully
 
@@ -171,15 +171,12 @@ def main() :
     weights = assembleWeights(2, assembledMat, dispArray, smoothingWeights, allElemBegin, allElemEnd)
 
     if (args.oldResults or args.afterslipReinvert) :
-        fileName = getFilename(config)
+        fileName = args.resultFolder
         
-        print(fileName)
         with open(fileName + '/estSlip.npy', 'rb') as f:
             estSlip = np.load(f)
         with open(fileName + '/predDisp.npy', 'rb') as f:
             predDisp = np.load(f)
-        
-        print(np.shape(predDisp))
 
     else :
         # ### PERFORM INVERSION ###
