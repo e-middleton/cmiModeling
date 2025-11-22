@@ -135,7 +135,6 @@ def findEdgeElem(cmi) :
 # putting the row/col value for a mesh element = one means when it's multiplied 
 # by the estimated slip, the result is zero in the data vector, so the trivial answer is that slip must be zero 
 def constraintMatrix(index, dispMat, containsTensile, shift=0) :
-
     # if the constraint matrix contains tensile slip, that means it is the cmi
     # and the cmi elements need to be shifted down columns by the fault elements
     if containsTensile :
