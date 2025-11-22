@@ -75,7 +75,6 @@ def main() :
     horiz = readMesh(config["inputs"]["cmi"] + ".msh") # read in mesh
     horiz = expandMesh(horiz) # expand mesh coordinates
 
-
     # ### INVERSION CODE ###
 
     # # READ IN GPS DATA #
@@ -98,10 +97,7 @@ def main() :
     for i in range(len(meshes)):
         n_tri[i] = len(meshes[i].lon1)
 
-    elemBegin = [0, n_tri[0]]  # list of indexes, the beginning of the fault mesh elem, beginning of the cmi mesh elem
-    elemEnd = [n_tri[0], n_tri[0]+n_tri[1]]
-
-    # function automatically removes tensile rows and columns from the subduction zone matrix in disp mat
+    # function automatically removes tensile rows and columns from the fault matrix in disp mat
     # and it then removes the corresponding rows and columns of smoothing mat, leaving it as a square matrix
 
     faultDispMat, faultSmoothingMat = createDispSmoothMats(gps=gps, numTri=len(fault["lon1"]), meshes=[meshes[0]], isFault=True)
@@ -191,11 +187,9 @@ def main() :
         newGps = removeFaultContribution(gps, estSlip, dispMat, allElemBegin)
         # create new disp mat with only the cmi, ignoring the fault
 
-        # function wants elemBegin and meshes as lists, so the single data values are in brackets
-        newDispMat, newSmoothingMat = createDispSmoothMats(newGps, np.sum(n_tri), [elemBegin[1]], [elemEnd[1]], [meshes[1]])
         # 0 shift because no fault elements
-        horizConstraint = constrain(horiz, "far_west", "far_north", newDispMat, True, 0)
-        newAssembledMat = np.vstack([newDispMat, newSmoothingMat, horizConstraint]) # stick constraint array as 3rd argument
+        horizConstraint = constrain(horiz, "far_west", "far_north", horizDispMat, True)
+        newAssembledMat = np.vstack([horizDispMat, horizSmoothingMat, horizConstraint]) # stick constraint array as 3rd argument
 
         newSmoothingWeights = [cmiSmoothing, config["constraint"]["cmiEdge"]] 
 
@@ -211,30 +205,31 @@ def main() :
         # re run the inversion but now only for cmi 
         determinant = np.linalg.det(newAssembledMat.T * newWeights.T @ newAssembledMat)
         if np.isclose(determinant, 0):
+            print(determinant)
             print("Matrix is singular or nearly singular.")
         else:
-            estSlip, predDisp = runInversion(newAssembledMat, newDispMat, newWeights, newDataVector)
+            estSlip, predDisp = runInversion(newAssembledMat, horizDispMat, newWeights, newDataVector)
     
 
-    # # VISUALIZE RESULTS
-    length = 0.2 # 5mm
-    scale = 0.2 # relative to cm, so 1cm vector scale = 1. 5mm vector scale = 0.5 etc.
+    # # # VISUALIZE RESULTS
+    # length = 0.2 # 5mm
+    # scale = 0.2 # relative to cm, so 1cm vector scale = 1. 5mm vector scale = 0.5 etc.
 
-    # slipDist(estSlip, gps, fault, horiz, vecScale, config["results"]["saveFigures"], config["results"]["slipDist"])
-    # # calls plotRatio
-    # displacements(dispMat, allElemBegin, estSlip, predDisp, gps, vecScale, config["results"]["saveFigures"], 
-    #             config["results"]["allDisp"], config["results"]["dispSep"], config["results"]["ratioFig"])
-    # afterslip(estSlip=estSlip, fault=fault)
+    # # slipDist(estSlip, gps, fault, horiz, vecScale, config["results"]["saveFigures"], config["results"]["slipDist"])
+    # # # calls plotRatio
+    # # displacements(dispMat, allElemBegin, estSlip, predDisp, gps, vecScale, config["results"]["saveFigures"], 
+    # #             config["results"]["allDisp"], config["results"]["dispSep"], config["results"]["ratioFig"])
+    # # afterslip(estSlip=estSlip, fault=fault)
     
-    plotLikeDiao(gps, predDisp, length, scale, dispMat, estSlip, allElemBegin, 58, config["results"]["saveFigures"], False)
+    # plotLikeDiao(gps, predDisp, length, scale, dispMat, estSlip, allElemBegin, 58, config["results"]["saveFigures"], False)
     # residualPlot(gps, predDisp, vecScale, config["results"]["saveFigures"], config["results"]["residFig"])
 
     # # numerical data
     # numericalData(estSlip, predDisp, gps, allElemBegin, fault, horiz, config["results"]["saveData"])
 
-    # # save config settings, just in case they're forgotten later and images are referenced
-    if (config["results"]["saveFigures"] or config["results"]["saveData"]):
-        saveConfig(config)
+    # # # save config settings, just in case they're forgotten later and images are referenced
+    # if (config["results"]["saveFigures"] or config["results"]["saveData"]):
+    #     saveConfig(config)
 
 
 if __name__ == "__main__":
