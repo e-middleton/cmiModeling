@@ -50,6 +50,7 @@ def runInversion(assembledMat, dispMat, weights, dataVector) :
     # Estimate slip using pre-calculated covariance
     estSlip = cov @ assembledMat.T * weights.T @ dataVector 
     # Predict displacement at stations
+    # note that .dot() will behave like @ or matmul because both dispMat and estSlip are 2D arrays
     predDisp = dispMat.dot(estSlip) 
     # run to check sign convention of dip slip (neg = east pos = west on CMI)
     # pred_disp = disp_mat[:, 1+all_elem_beg[1]::3].dot(est_slip[1+all_elem_beg[1]::3])
