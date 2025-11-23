@@ -97,23 +97,26 @@ def main() :
     for i in range(len(meshes)):
         n_tri[i] = len(meshes[i].lon1)
 
+    elemBegin = [0, n_tri[0]]  # list of indexes, the beginning of the fault mesh elem, beginning of the cmi mesh elem
+    elemEnd = [n_tri[0], n_tri[0]+n_tri[1]]
+
     # function automatically removes tensile rows and columns from the fault matrix in disp mat
     # and it then removes the corresponding rows and columns of smoothing mat, leaving it as a square matrix
 
-    faultDispMat, faultSmoothingMat = createDispSmoothMats(gps=gps, numTri=len(fault["lon1"]), meshes=[meshes[0]], isFault=True)
-    horizDispMat, horizSmoothingMat = createDispSmoothMats(gps=gps, numTri=len(horiz["lon1"]), meshes=[meshes[1]])
+    # faultDispMat, faultSmoothingMat = createDispSmoothMats(gps=gps, numTri=len(fault["lon1"]), meshes=[meshes[0]], isFault=True)
+    # horizDispMat, horizSmoothingMat = createDispSmoothMats(gps=gps, numTri=len(horiz["lon1"]), meshes=[meshes[1]])
 
-    # square matrix requires blocks of zeros to hold space
-    upperRightBlock = np.zeros((len(faultSmoothingMat[0]), len(horizSmoothingMat[0])))
-    lowerLeftBlock = np.zeros((len(horizSmoothingMat[0]), len(faultSmoothingMat[0])))
+    # # square matrix requires blocks of zeros to hold space
+    # upperRightBlock = np.zeros((len(faultSmoothingMat[0]), len(horizSmoothingMat[0])))
+    # lowerLeftBlock = np.zeros((len(horizSmoothingMat[0]), len(faultSmoothingMat[0])))
 
-    faultRow = np.hstack((faultSmoothingMat, upperRightBlock))
-    cmiRow = np.hstack((lowerLeftBlock, horizSmoothingMat))
+    # faultRow = np.hstack((faultSmoothingMat, upperRightBlock))
+    # cmiRow = np.hstack((lowerLeftBlock, horizSmoothingMat))
 
-    # stick together column wise
-    dispMat = np.hstack((faultDispMat, horizDispMat))
-    smoothingMat = np.vstack((faultRow, cmiRow))
-    # dispMat, smoothingMat = createDispSmoothMats(gps, np.sum(n_tri), elemBegin, elemEnd, meshes)
+    # # stick together column wise
+    # dispMat = np.hstack((faultDispMat, horizDispMat))
+    # smoothingMat = np.vstack((faultRow, cmiRow))
+    dispMat, smoothingMat = createDispSmoothMats(gps, np.sum(n_tri), elemBegin, elemEnd, meshes)
 
     # *function should built-in test for flattened elements hopefully
 
@@ -211,21 +214,22 @@ def main() :
             estSlip, predDisp = runInversion(newAssembledMat, horizDispMat, newWeights, newDataVector)
     
 
-    # # # VISUALIZE RESULTS
-    # length = 0.2 # 5mm
-    # scale = 0.2 # relative to cm, so 1cm vector scale = 1. 5mm vector scale = 0.5 etc.
+    # # VISUALIZE RESULTS
+    length = 0.2 # 5mm
+    scale = 0.2 # relative to cm, so 1cm vector scale = 1. 5mm vector scale = 0.5 etc.
+    vecScale = 1500 # typical vector scaling for 2 year data
 
-    # # slipDist(estSlip, gps, fault, horiz, vecScale, config["results"]["saveFigures"], config["results"]["slipDist"])
-    # # # calls plotRatio
-    # # displacements(dispMat, allElemBegin, estSlip, predDisp, gps, vecScale, config["results"]["saveFigures"], 
-    # #             config["results"]["allDisp"], config["results"]["dispSep"], config["results"]["ratioFig"])
-    # # afterslip(estSlip=estSlip, fault=fault)
+    # slipDist(estSlip, gps, fault, horiz, vecScale, config["results"]["saveFigures"], config["results"]["slipDist"])
+    # # calls plotRatio
+    # displacements(dispMat, allElemBegin, estSlip, predDisp, gps, vecScale, config["results"]["saveFigures"], 
+    #             config["results"]["allDisp"], config["results"]["dispSep"], config["results"]["ratioFig"])
+    # afterslip(estSlip=estSlip, fault=fault)
     
-    # plotLikeDiao(gps, predDisp, length, scale, dispMat, estSlip, allElemBegin, 58, config["results"]["saveFigures"], False)
+    # # plotLikeDiao(gps, predDisp, length, scale, dispMat, estSlip, allElemBegin, 58, config["results"]["saveFigures"], False)
     # residualPlot(gps, predDisp, vecScale, config["results"]["saveFigures"], config["results"]["residFig"])
 
-    # # numerical data
-    # numericalData(estSlip, predDisp, gps, allElemBegin, fault, horiz, config["results"]["saveData"])
+    # numerical data
+    numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, horiz, config["results"]["saveData"])
 
     # # # save config settings, just in case they're forgotten later and images are referenced
     # if (config["results"]["saveFigures"] or config["results"]["saveData"]):
