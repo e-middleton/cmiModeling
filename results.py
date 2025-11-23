@@ -385,11 +385,12 @@ def calcMoment(estSlip, allElemBegin, fault, cmi):
     return faultTotalMoment, cmiTotalMoment
 
 
-def numericalData(estSlip, predDisp, gps, allElemBegin, fault, cmi, saveData):
+def numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, cmi, saveData):
     maxFaultMag, maxCmiMag = maxSlipMag(estSlip, allElemBegin)
     rmse = calcRMSE(predDisp, gps)
     faultMoment, cmiMoment = calcMoment(estSlip, allElemBegin, fault, cmi)
     avgFaultRake, avgCmiRake = rakeCalc(estSlip, allElemBegin)
+    percentFault, percentCmi = contributionsPercent(predDisp=predDisp, dispMat=dispMat, estSlip=estSlip, allElemBegin=allElemBegin)
 
     print("Maximum magnitude of fault slip (m): ", maxFaultMag)
     print("Maximum magnitude of slip on cmi (m): ", maxCmiMag)
@@ -403,6 +404,9 @@ def numericalData(estSlip, predDisp, gps, allElemBegin, fault, cmi, saveData):
     print("weighted average fault rake: ", avgFaultRake)
     print("weighted average cmi rake: ", avgCmiRake)
 
+    print("Percentage of displacements from afterslip: ", percentFault)
+    print("Percentage of displacements from cmi: ", percentCmi)
+
     # calc done in residual plotting
 
     results = {}
@@ -413,6 +417,8 @@ def numericalData(estSlip, predDisp, gps, allElemBegin, fault, cmi, saveData):
     results["rmse (cm)"] = rmse
     results["avgFaultRake (deg)"] = avgFaultRake
     results["avgCmiRake (deg)"] = avgCmiRake
+    results["percentCmi"] = percentCmi
+    results["percentFault"] = percentFault
 
 
     if (saveData) :
@@ -451,3 +457,59 @@ def rakeCalc(estSlip, allElemBegin) :
     return weightedFaultRake, weightedCmiRake
 
 
+# function for returning the percentage of total 
+# displacement that the cmi is responsible for
+# compared to total percentage of displacements that
+# the afterslip is contributing
+# the percentages are calculated component (e/n/u) wise because trying to calc percentages using the total displacement vector
+# magnitude compounds rounding differences from np.float64
+# for a specific run of D40_SU_Testing/test0 the differences were
+# sum(predDisp - cmiDisp - faultDisp) = 7.8402...e-15
+# sum(totalDisp - totalCmiDisp - totalFaultDisp) = -261.972...
+# where totalDisp and the others were the square root of the summed squares of the component displacements (i.e., the magnitude of the displacement vector in R3)
+def contributionsPercent(predDisp, dispMat, estSlip, allElemBegin) :
+    predDisp2 = np.hstack((dispMat[:, allElemBegin[0]:allElemBegin[1]], dispMat[:, allElemBegin[1]:allElemBegin[2]])).dot(np.vstack((estSlip[allElemBegin[0]:allElemBegin[1]], estSlip[allElemBegin[1]:allElemBegin[2]])))
+    # print(np.all(predDisp == predDisp2))
+    
+    # square the components
+    east_disp = np.square(predDisp[0::3]).T
+    north_disp = np.square(predDisp[1::3]).T
+    vertical_disp = np.square(predDisp[2::3]).T
+
+    # add together north, east, and vertical disp, sum down column, take square root for magnitude of displacement for each station
+    totalDisp = np.sqrt(np.sum(np.vstack((east_disp, north_disp, vertical_disp)), axis=0))
+
+    # calc disp from cmi, beginning from the cmi elements to the end of the cmi elements
+    cmi_disp = dispMat[:, allElemBegin[1]:allElemBegin[2]].dot(estSlip[allElemBegin[1]:allElemBegin[2]]) 
+    cmi_e = np.square(cmi_disp[0::3]).T # square components
+    cmi_n = np.square(cmi_disp[1::3]).T
+    cmi_u = np.square(cmi_disp[2::3]).T
+    totalCmiDisp = np.sqrt(np.sum(np.vstack((cmi_e, cmi_n, cmi_u)), axis=0))
+
+    # fault disp
+    fault_disp = dispMat[:, allElemBegin[0]:allElemBegin[1]].dot(estSlip[allElemBegin[0]:allElemBegin[1]])
+
+    # print("predicted east displacement: ", predDisp[0,0])
+    # print("Predicted east motion from cmi slip: ", cmi_disp[0,0])
+    # print("Predicted east motion from fault slip: ", fault_disp[0,0])
+    # print("Difference in predicted east motions: ", predDisp[0,0] - cmi_disp[0,0] - fault_disp[0,0])
+    # print("Difference in predicted north displacements: ", predDisp[1,0] - cmi_disp[1,0] - fault_disp[1,0])
+    # print("Differences in predicted vertical displacements: ", predDisp[2,0] - cmi_disp[2,0] - fault_disp[2,0])
+    # print("total magnitude of displacement vector: ", totalDisp[0])
+    # print("total disp mag from cmi slip: ", totalCmiDisp[0])
+    # print("total disp mag from afterslip: ", totalFaultDisp[0])
+    # print("difference in vector magnitudes: ", totalDisp[0] - totalCmiDisp[0] - totalFaultDisp[0])
+
+    # print("summed component wise value subtractions: ", np.sum(predDisp - fault_disp - cmi_disp))
+    # print("summed vector differences: ", np.sum(totalDisp - totalCmiDisp - totalFaultDisp))
+
+    # for each station, calculate the percentage of cmi and the percentage of fault contributions
+
+    # use element wise division
+    cmiPercentage = (cmi_disp / predDisp) * 100
+    faultPercentage = (fault_disp / predDisp) * 100
+
+    totalCmiPercent = np.sum(cmiPercentage) / cmiPercentage.size
+    totalFaultPercent = np.sum(faultPercentage) / faultPercentage.size
+
+    return totalFaultPercent, totalCmiPercent
