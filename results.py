@@ -420,7 +420,6 @@ def numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, cmi, sav
     results["percentCmi"] = percentCmi
     results["percentFault"] = percentFault
 
-
     if (saveData) :
         with open("numericalResults.txt", "w") as file:
             file.write(json.dumps(results, indent=4, sort_keys=True))
@@ -509,6 +508,18 @@ def contributionsPercent(predDisp, dispMat, estSlip, allElemBegin) :
     cmiPercentage = (cmi_disp / predDisp) * 100
     faultPercentage = (fault_disp / predDisp) * 100
 
+    # negative percentages mean "canceling out"
+    # given 100% to the more influential element
+    # positive elements are more influential because they have the same sense motion as pred_disp
+    print(len(cmiPercentage))
+    for i in range(len(cmiPercentage)) :
+        if (cmiPercentage[i,0]<0) :
+            faultPercentage[i,0] = 100
+            cmiPercentage[i,0] = 0
+        if (faultPercentage[i,0]<0) :
+            cmiPercentage[i,0] = 100
+            faultPercentage[i,0] = 0
+    
     totalCmiPercent = np.sum(cmiPercentage) / cmiPercentage.size
     totalFaultPercent = np.sum(faultPercentage) / faultPercentage.size
 
