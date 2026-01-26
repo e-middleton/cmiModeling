@@ -103,20 +103,20 @@ def main() :
     # function automatically removes tensile rows and columns from the fault matrix in disp mat
     # and it then removes the corresponding rows and columns of smoothing mat, leaving it as a square matrix
 
-    # faultDispMat, faultSmoothingMat = createDispSmoothMats(gps=gps, numTri=len(fault["lon1"]), meshes=[meshes[0]], isFault=True)
-    # horizDispMat, horizSmoothingMat = createDispSmoothMats(gps=gps, numTri=len(horiz["lon1"]), meshes=[meshes[1]])
+    faultDispMat, faultSmoothingMat = createDispSmoothMats(gps=gps, numTri=len(fault["lon1"]), meshes=[meshes[0]], isFault=True)
+    horizDispMat, horizSmoothingMat = createDispSmoothMats(gps=gps, numTri=len(horiz["lon1"]), meshes=[meshes[1]])
 
-    # # square matrix requires blocks of zeros to hold space
-    # upperRightBlock = np.zeros((len(faultSmoothingMat[0]), len(horizSmoothingMat[0])))
-    # lowerLeftBlock = np.zeros((len(horizSmoothingMat[0]), len(faultSmoothingMat[0])))
+    # square matrix requires blocks of zeros to hold space
+    upperRightBlock = np.zeros((len(faultSmoothingMat[0]), len(horizSmoothingMat[0])))
+    lowerLeftBlock = np.zeros((len(horizSmoothingMat[0]), len(faultSmoothingMat[0])))
 
-    # faultRow = np.hstack((faultSmoothingMat, upperRightBlock))
-    # cmiRow = np.hstack((lowerLeftBlock, horizSmoothingMat))
+    faultRow = np.hstack((faultSmoothingMat, upperRightBlock))
+    cmiRow = np.hstack((lowerLeftBlock, horizSmoothingMat))
 
-    # # stick together column wise
-    # dispMat = np.hstack((faultDispMat, horizDispMat))
-    # smoothingMat = np.vstack((faultRow, cmiRow))
-    dispMat, smoothingMat = createDispSmoothMats(gps, np.sum(n_tri), elemBegin, elemEnd, meshes)
+    # stick together column wise
+    dispMat = np.hstack((faultDispMat, horizDispMat))
+    smoothingMat = np.vstack((faultRow, cmiRow))
+    # dispMat, smoothingMat = createDispSmoothMats(gps, np.sum(n_tri), elemBegin, elemEnd, meshes)
 
     # *function should built-in test for flattened elements hopefully
 
@@ -229,12 +229,12 @@ def main() :
     # residualPlot(gps, predDisp, vecScale, config["results"]["saveFigures"], config["results"]["residFig"])
 
     # numerical data
+
     numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, horiz, config["results"]["saveData"])
 
-    # # # save config settings, just in case they're forgotten later and images are referenced
+    # # save config settings, just in case they're forgotten later and images are referenced
     # if (config["results"]["saveFigures"] or config["results"]["saveData"]):
     #     saveConfig(config)
-
 
 if __name__ == "__main__":
     main()
