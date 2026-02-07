@@ -60,9 +60,32 @@ def slipDist(estSlip, gps, fault, cmi, vecScale, slipDist=False, saveFigures=Fal
     ax[1].set_xlabel("Longitude")
 
     if saveFigures and slipDist:
-        plt.savefig('slip_dist.pdf') # save the figure
+        plt.savefig('slip_dist.png') # save the figure
     
     plt.close('all')
+
+    return
+
+def observedCalculated(predDisp, gps, vecScale):
+    xmin = 130
+    xmax = 144
+    ymin = 32
+    ymax = 43
+
+    coast = pd.read_csv("coastline.csv")
+    lon_corr = 1
+
+    fig, ax = plt.subplots(figsize=(8,6))
+    ax.plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5)
+    Q = ax.quiver(gps.lon, gps.lat, gps.east_vel, gps.north_vel, scale=vecScale, color='k', label="observed")
+    ax.quiverkey(Q, X=0.3, Y=0.8, U=50, label="50 cm", labelpos='N', color='k')
+    ax.quiver(gps.lon, gps.lat, predDisp[0::3], predDisp[1::3], scale=vecScale, color='r', label="predicted")
+    ax.set(xlim=(xmin, xmax), ylim=(ymin, ymax), aspect='equal')
+    ax.set_ylabel("Latitude")
+    ax.set_xlabel("Longitude")
+    plt.legend()
+    plt.savefig("calcObs.png")
+    plt.close("all")
 
     return
 
@@ -105,7 +128,7 @@ def afterslip(estSlip, fault):
     ax[1].set(xlim=(xmin-2, xmax), ylim=(ymin, ymax), aspect='equal')
     ax[1].title.set_text("Fault depth") #graph 2
 
-    plt.savefig("afterslip.pdf")
+    plt.savefig("afterslip.png")
     plt.close('all')
 
     return
@@ -154,18 +177,19 @@ def displacements(dispMat, allElemBegin, estSlip, predDisp, gps, vecScale, saveF
     if saveFigures and allDisp:
         plt.savefig('totalDisp.pdf')
 
+    miniVecScale = 500
     fig, ax = plt.subplots(1, 2, figsize=(10,5))
-    Q2 = ax[0].quiver(gps.lon, gps.lat, cmi_disp[0::3], cmi_disp[1::3], scale=vecScale, color='b', label="cmi contribution")
-    ax[0].quiverkey(Q2, X=0.3, Y=0.8, U=50, label="0.5 m", labelpos='N', color='b')
+    Q2 = ax[0].quiver(gps.lon, gps.lat, cmi_disp[0::3], cmi_disp[1::3], scale=miniVecScale, color='b', label="cmi contribution")
+    ax[0].quiverkey(Q2, X=0.3, Y=0.8, U=30, label="30 cm", labelpos='N', color='b')
     ax[0].set_ylim([32.5, 45])
-    ax[0].set_xlim([129, 143])
+    ax[0].set_xlim([129, 143.5])
     ax[0].set_title("Cmi contribution")
     ax[0].legend()
 
-    Q3 = ax[1].quiver(gps.lon, gps.lat, fault_disp[0::3], fault_disp[1::3], scale=vecScale, color='g', label="fault contribution")
-    ax[1].quiverkey(Q3, X=0.3, Y=0.8, U=100, label="100 cm", labelpos='N', color='g')
+    Q3 = ax[1].quiver(gps.lon, gps.lat, fault_disp[0::3], fault_disp[1::3], scale=miniVecScale, color='g', label="fault contribution")
+    ax[1].quiverkey(Q3, X=0.3, Y=0.8, U=30, label="30 cm", labelpos='N', color='g')
     ax[1].set_ylim([32.5, 45])
-    ax[1].set_xlim([129, 143])
+    ax[1].set_xlim([129, 143.5])
     plt.title("fault contribution")
 
     if saveFigures and dispSep:
@@ -220,21 +244,21 @@ def residualPlot(gps, predDisp, vecScale, saveFigures=False, residFig=False) :
     plt.close('all')
     fig, ax = plt.subplots(1, 2, figsize=(10,5))
     #ax.quiver(gps.lon, gps.lat, gps.east_vel, gps.north_vel, scale=vec_scale, color='k', label='observed')
-    Q = ax[0].quiver(gps.lon, gps.lat, residuals[:,0], residuals[:,1], scale=vecScale/20, color='r', label="residuals")
-    ax[0].quiverkey(Q, X=0.3, Y=0.8, U=5, label="5cm", labelpos='N', color='r')
+    Q = ax[0].quiver(gps.lon, gps.lat, residuals[:,0], residuals[:,1], scale=vecScale/2, color='r', label="residuals")
+    ax[0].quiverkey(Q, X=0.3, Y=0.8, U=30, label="30 cm", labelpos='N', color='r')
     #ax.quiver(gps.lon, gps.lat, data_vector[0:1497:3], data_vector[1:1497:3], scale=vec_scale, color='b')
     ax[0].set_ylim([32.5, 45])
-    ax[0].set_xlim([129, 143])
+    ax[0].set_xlim([129, 145])
     ax[0].set_title("Residual displacements (horizontal)")
 
-    Q1 = ax[1].quiver(gps.lon, gps.lat, 0, residuals[:,2], scale=vecScale/20, color='r', label="residuals")
-    ax[1].quiverkey(Q1, X=0.3, Y=0.8, U=5, label='5 cm', labelpos='N', color='r')
+    Q1 = ax[1].quiver(gps.lon, gps.lat, 0, residuals[:,2], scale=vecScale/2, color='r', label="residuals")
+    ax[1].quiverkey(Q1, X=0.3, Y=0.8, U=10, label='10 cm', labelpos='N', color='r')
     ax[1].set_ylim([32.5, 45])
-    ax[1].set_xlim([129, 143])
+    ax[1].set_xlim([129, 145])
     plt.title("residual displacements (vertical)")
 
     if saveFigures and residFig:
-        plt.savefig("residuals.pdf")
+        plt.savefig("residuals.png")
     
     plt.close('all')
 
