@@ -3,7 +3,7 @@ import numpy as np # Numerical analysis
 from prepareMeshes import findContour, meshCmi, expandMesh
 from createMatrices import findEdgeElem, createDispSmoothMats, createIndexingLists, constrain
 import celeri
-from results import slipDist, displacements, residualPlot, numericalData, saveConfig, plotLikeDiao, afterslip
+from results import slipDist, displacements, residualPlot, numericalData, saveConfig, plotLikeDiao, afterslip, observedCalculated
 import yaml, argparse
 from files_io import readMesh, readGPS
 from runInversion import runInversion, assembleWeights, removeFaultContribution
@@ -218,6 +218,7 @@ def main() :
     length = 0.2 # 5mm
     scale = 0.2 # relative to cm, so 1cm vector scale = 1. 5mm vector scale = 0.5 etc.
     vecScale = 1500 # typical vector scaling for 2 year data
+    vecScale2 = 1000 # scaling for comparing between observed and calc 2 yrs
 
     # slipDist(estSlip, gps, fault, horiz, vecScale, config["results"]["saveFigures"], config["results"]["slipDist"])
     # # calls plotRatio
@@ -226,11 +227,12 @@ def main() :
     # afterslip(estSlip=estSlip, fault=fault)
     
     # # plotLikeDiao(gps, predDisp, length, scale, dispMat, estSlip, allElemBegin, 58, config["results"]["saveFigures"], False)
-    # residualPlot(gps, predDisp, vecScale, config["results"]["saveFigures"], config["results"]["residFig"])
-
+    residualPlot(gps, predDisp, vecScale, config["results"]["saveFigures"], config["results"]["residFig"])
+    # observedCalculated(predDisp, gps, vecScale2)
+    
     # numerical data
 
-    numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, horiz, config["results"]["saveData"])
+    # numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, horiz, config["results"]["saveData"])
 
     # # save config settings, just in case they're forgotten later and images are referenced
     # if (config["results"]["saveFigures"] or config["results"]["saveData"]):
