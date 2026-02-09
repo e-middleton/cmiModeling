@@ -16,8 +16,8 @@ Running past results should be done via the command line as
 `python3 main.py "--oldResults" "--resultFolder=/path/to/testing/folder"`
 
 The testing folder should contain numpy files for the predicted gps displacements, predDisp, the estimated slip distributions, estSlip, and a config settings file as the minimum requirements for running old results. 
-As a note, some plots, particularly diaoFormattedDisplacements in results.py might require manual updates for the axes titles.
-Outputs will automatically be written to the current working directory.
+As a note, some plots, particularly diaoFormattedDisplacements in results.py might require manual updates for the axes titles and vector scaling numbers.
+Outputs will automatically be written to the current working directory and will ***not*** write to the results folder.
 
 ***NOTE***: Longitude correction for calculations has been hardcoded to 1 (Hokkaido range), and assumes that the maximum longitude value of the meshes/coastline data is < 180.
 

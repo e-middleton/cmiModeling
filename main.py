@@ -227,8 +227,8 @@ def main() :
     # afterslip(estSlip=estSlip, fault=fault)
     
     # # plotLikeDiao(gps, predDisp, length, scale, dispMat, estSlip, allElemBegin, 58, config["results"]["saveFigures"], False)
-    residualPlot(gps, predDisp, vecScale, config["results"]["saveFigures"], config["results"]["residFig"])
-    # observedCalculated(predDisp, gps, vecScale2)
+    # residualPlot(gps, predDisp, vecScale, config["results"]["saveFigures"], config["results"]["residFig"])
+    observedCalculated(predDisp, gps, vecScale2, estSlip, fault)
     
     # numerical data
 

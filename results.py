@@ -66,7 +66,7 @@ def slipDist(estSlip, gps, fault, cmi, vecScale, slipDist=False, saveFigures=Fal
 
     return
 
-def observedCalculated(predDisp, gps, vecScale):
+def observedCalculated(predDisp, gps, vecScale, estSlip, fault):
     xmin = 130
     xmax = 144
     ymin = 32
@@ -75,7 +75,21 @@ def observedCalculated(predDisp, gps, vecScale):
     coast = pd.read_csv("coastline.csv")
     lon_corr = 1
 
-    fig, ax = plt.subplots(figsize=(8,6))
+    # dip slip on the CMI represents east-west motion, where east is negative and west is positive
+    slip_type = 1 # 0 = strike slip 1 = dip slip, only for CMI, 2 (manual) is vertical/tensile
+    end_idx = 2* len(fault["lon1"]) #end of fault elem beginning of cmi elem
+    slip_vals = [estSlip[slip_type:end_idx:2]/100, estSlip[slip_type+end_idx::3]/100] # dip slip values for fault and CMI, converted from cm to m
+
+    maxMag = np.max(np.abs(slip_vals[0]))
+
+    fig, ax = plt.subplots( figsize=(8, 6))
+    rso = ax.tripcolor(fault["points"][:,0],
+                        fault["points"][:,1], 
+                        fault["verts"],
+                        facecolors=(slip_vals[0]).flatten(), 
+                        vmin=-maxMag, vmax=maxMag)
+    cbar1 = fig.colorbar(rso, ax=ax, orientation='vertical')
+    cbar1.set_label("Dip Slip (m)")
     ax.plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5)
     Q = ax.quiver(gps.lon, gps.lat, gps.east_vel, gps.north_vel, scale=vecScale, color='k', label="observed")
     ax.quiverkey(Q, X=0.3, Y=0.8, U=50, label="50 cm", labelpos='N', color='k')
@@ -84,14 +98,14 @@ def observedCalculated(predDisp, gps, vecScale):
     ax.set_ylabel("Latitude")
     ax.set_xlabel("Longitude")
     plt.legend()
-    plt.savefig("calcObs.png")
+    plt.savefig("calcObs2.png")
     plt.close("all")
 
     return
 
 
 def afterslip(estSlip, fault):
-     # plot for visualizing
+    # plot for visualizing
     xmin = 140
     xmax = 148
     ymin = 32
