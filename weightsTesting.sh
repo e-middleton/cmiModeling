@@ -1,4 +1,6 @@
 #! /bin/bash
+source ~/miniconda3/etc/profile.d/conda.sh 
+conda activate celeri
 
 cd _outputsCMI
 mkdir D40_SU_Testing
