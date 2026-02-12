@@ -117,21 +117,30 @@ def afterslip(estSlip, fault):
     # dip slip on the CMI represents east-west motion, where east is negative and west is positive
     slip_type = 1 # 0 = strike slip 1 = dip slip, only for CMI, 2 (manual) is vertical/tensile
     end_idx = 2* len(fault["lon1"]) #end of fault elem beginning of cmi elem
-    slip_vals = [estSlip[slip_type:end_idx:2]/100, estSlip[slip_type+end_idx::3]/100] # dip slip values for fault and CMI, converted from cm to m
+    dip_slip_vals = np.array(estSlip[slip_type:end_idx:2]/100) # dip slip values for fault only
+    strike_slip_vals = np.array(estSlip[0:end_idx:2]/100)
 
-    maxMag = np.max(np.abs(slip_vals[0]))
+    print(type(dip_slip_vals))
+
+    # print(np.shape(dip_slip_vals))
+    # print(np.shape(strike_slip_vals))
+
+    # slip is a combination of dip slip and strike slip
+    # ** cmi has tensile slip too but for now plotting is in cartesian plane
+    # slip = (dip_slip^2 + strike_slip^2) ^ (1/2)
+    slip = np.sqrt(np.square(dip_slip_vals) + np.square(strike_slip_vals))
 
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(12, 8))
     rso = ax[0].tripcolor(fault["points"][:,0],
                         fault["points"][:,1], 
                         fault["verts"],
-                        facecolors=(slip_vals[0]).flatten(), 
-                        vmin=-maxMag, vmax=maxMag)
+                        facecolors=(slip).flatten(), 
+                        vmin=-6, vmax=6)
     cbar1 = fig.colorbar(rso, ax=ax[0], orientation='vertical')
     ax[0].plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5)
     cbar1.set_label("Slip (m)")
     ax[0].set(xlim=(xmin-2, xmax), ylim=(ymin, ymax), aspect='equal')
-    ax[0].title.set_text("Fault Dip Slip") #graph 1
+    ax[0].title.set_text("Fault Slip") #graph 1
     ax[0].set_ylabel("Latitude")
     ax[0].set_xlabel("Longitude")
 
@@ -142,7 +151,7 @@ def afterslip(estSlip, fault):
     ax[1].set(xlim=(xmin-2, xmax), ylim=(ymin, ymax), aspect='equal')
     ax[1].title.set_text("Fault depth") #graph 2
 
-    plt.savefig("afterslip.png")
+    plt.savefig("afterslip.pdf")
     plt.close('all')
 
     return
