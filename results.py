@@ -60,7 +60,7 @@ def slipDist(estSlip, gps, fault, cmi, vecScale, slipDist=False, saveFigures=Fal
     ax[1].set_xlabel("Longitude")
 
     if saveFigures and slipDist:
-        plt.savefig('slip_dist.png') # save the figure
+        plt.savefig('slip_dist.pdf') # save the figure
     
     plt.close('all')
 
@@ -98,7 +98,7 @@ def observedCalculated(predDisp, gps, vecScale, estSlip, fault):
     ax.set_ylabel("Latitude")
     ax.set_xlabel("Longitude")
     plt.legend()
-    plt.savefig("calcObs2.png")
+    plt.savefig("calcObs2.pdf")
     plt.close("all")
 
     return
@@ -281,7 +281,7 @@ def residualPlot(gps, predDisp, vecScale, saveFigures=False, residFig=False) :
     plt.title("residual displacements (vertical)")
 
     if saveFigures and residFig:
-        plt.savefig("residuals.png")
+        plt.savefig("residuals.pdf")
     
     plt.close('all')
 
