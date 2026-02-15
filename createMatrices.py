@@ -241,7 +241,7 @@ def findConstraintRows(mesh, elem, elem2="") :
         index2 = np.nonzero(mesh[elem2])[0].reshape(-1,1)
         return index, index2
     else :
-        return index
+        return index, [] # blank list for the second
     
 
 # create the constraint matrix for each mesh, fault and cmi, based upon the elements
