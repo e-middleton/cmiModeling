@@ -120,11 +120,6 @@ def afterslip(estSlip, fault):
     dip_slip_vals = np.array(estSlip[slip_type:end_idx:2]/100) # dip slip values for fault only
     strike_slip_vals = np.array(estSlip[0:end_idx:2]/100)
 
-    print(type(dip_slip_vals))
-
-    # print(np.shape(dip_slip_vals))
-    # print(np.shape(strike_slip_vals))
-
     # slip is a combination of dip slip and strike slip
     # ** cmi has tensile slip too but for now plotting is in cartesian plane
     # slip = (dip_slip^2 + strike_slip^2) ^ (1/2)
@@ -182,38 +177,63 @@ def displacements(dispMat, allElemBegin, estSlip, predDisp, gps, vecScale, saveF
     totalFaultDisp = np.sqrt(np.sum(np.vstack((fault_e, fault_n)), axis=0))
 
     plotRatio(gps, totalCmiDisp, totalDisp, saveFigures, ratioFig)
+    plotPercent(gps, predDisp, cmi_disp, saveFigures)
 
-    fig, ax = plt.subplots(1, 2, figsize=(10,5))
-    Q= ax[0].quiver(gps.lon, gps.lat, gps.east_vel, gps.north_vel, scale=vecScale, color='k', label='observed')
-    ax[0].quiverkey(Q, X = 0.3, Y=0.8, U=100, label='100 cm',labelpos='N', color='r')
-    ax[0].set_title("Observed displacements (cm)")
-    ax[0].set_ylim([32.5, 45])
-    ax[0].set_xlim([129, 143])
+    fig, ax = plt.subplots(2, 2, figsize=(10,12))
+    Q= ax[0][0].quiver(gps.lon, gps.lat, gps.east_vel, gps.north_vel, scale=vecScale, color='k', label='observed')
+    ax[0][0].quiverkey(Q, X = 0.3, Y=0.8, U=100, label='100 cm',labelpos='N', color='k')
+    ax[0][0].set_title("Observed displacements (cm)")
+    ax[0][0].set_ylim([32.5, 45])
+    ax[0][0].set_xlim([129, 143])
 
-    Q1 = ax[1].quiver(gps.lon, gps.lat, predDisp[0::3], predDisp[1::3], scale=vecScale, color='r', label='predicted')
-    ax[1].quiverkey(Q1, X=0.3, Y=0.8, U=100, label="100 cm", labelpos='N', color='r')
+    Q1 = ax[0][1].quiver(gps.lon, gps.lat, predDisp[0::3], predDisp[1::3], scale=vecScale, color='r', label='predicted')
+    ax[0][1].quiverkey(Q1, X=0.3, Y=0.8, U=100, label="100 cm", labelpos='N', color='r')
     #ax.quiver(gps.lon, gps.lat, data_vector[0:1497:3], data_vector[1:1497:3], scale=vec_scale, color='b')
-    ax[1].set_ylim([32.5, 45])
-    ax[1].set_xlim([129, 143])
-    plt.title("Predicted Displacements (cm)")
+    ax[0][1].set_ylim([32.5, 45])
+    ax[0][1].set_xlim([129, 143])
+    ax[0][1].set_title("Predicted Displacements (cm)")
+
+    Q0 = ax[1][0].quiver(gps.lon, gps.lat, np.zeros_like(gps.north_vel), gps.up_vel, scale=vecScale/10, color='k', label='observed')
+    ax[1][0].quiverkey(Q0, X = 0.3, Y=0.8, U=10, label='10 cm',labelpos='N', color='k')
+    ax[1][0].set_title("Observed displacements (cm)")
+    ax[1][0].set_ylim([32.5, 45])
+    ax[1][0].set_xlim([129, 143])
+
+    Q11 = ax[1][1].quiver(gps.lon, gps.lat, np.zeros_like(predDisp[0::3]), predDisp[2::3], scale=vecScale/10, color='r', label='predicted')
+    ax[1][1].quiverkey(Q11, X=0.3, Y=0.8, U=10, label="10 cm", labelpos='N', color='r')
+    ax[1][1].set_ylim([32.5, 45])
+    ax[1][1].set_xlim([129, 143])
+    ax[1][1].set_title("Predicted Displacements (cm)")
 
     if saveFigures and allDisp:
         plt.savefig('totalDisp.pdf')
 
     miniVecScale = 500
-    fig, ax = plt.subplots(1, 2, figsize=(10,5))
-    Q2 = ax[0].quiver(gps.lon, gps.lat, cmi_disp[0::3], cmi_disp[1::3], scale=miniVecScale, color='b', label="cmi contribution")
-    ax[0].quiverkey(Q2, X=0.3, Y=0.8, U=30, label="30 cm", labelpos='N', color='b')
-    ax[0].set_ylim([32.5, 45])
-    ax[0].set_xlim([129, 143.5])
-    ax[0].set_title("Cmi contribution")
-    ax[0].legend()
+    fig, ax = plt.subplots(2, 2, figsize=(10,12))
+    Q2 = ax[0][0].quiver(gps.lon, gps.lat, cmi_disp[0::3], cmi_disp[1::3], scale=miniVecScale, color='b', label="cmi contribution")
+    ax[0][0].quiverkey(Q2, X=0.3, Y=0.8, U=30, label="30 cm", labelpos='N', color='b')
+    ax[0][0].set_ylim([32.5, 45])
+    ax[0][0].set_xlim([129, 143.5])
+    ax[0][0].set_title("Cmi contribution")
+    # ax[0].legend()
 
-    Q3 = ax[1].quiver(gps.lon, gps.lat, fault_disp[0::3], fault_disp[1::3], scale=miniVecScale, color='g', label="fault contribution")
-    ax[1].quiverkey(Q3, X=0.3, Y=0.8, U=30, label="30 cm", labelpos='N', color='g')
-    ax[1].set_ylim([32.5, 45])
-    ax[1].set_xlim([129, 143.5])
-    plt.title("fault contribution")
+    Q3 = ax[0][1].quiver(gps.lon, gps.lat, fault_disp[0::3], fault_disp[1::3], scale=miniVecScale, color='g', label="fault contribution")
+    ax[0][1].quiverkey(Q3, X=0.3, Y=0.8, U=30, label="30 cm", labelpos='N', color='g')
+    ax[0][1].set_ylim([32.5, 45])
+    ax[0][1].set_xlim([129, 143.5])
+    ax[0][1].set_title("fault contribution")
+
+    ogVec = np.zeros_like(fault_disp[0::3])
+    ogVec2 = np.zeros_like(cmi_disp[0::3])
+    Q4 = ax[1][0].quiver(gps.lon, gps.lat, ogVec2, cmi_disp[2::3], scale=miniVecScale/5, color='b', label="cmi contribution")
+    ax[1][0].quiverkey(Q4, X=0.3, Y=0.8, U=10, label="10 cm", labelpos='N', color='b')
+    ax[1][0].set_ylim([32.5, 45])
+    ax[1][0].set_xlim([129, 143.5])
+
+    Q5 = ax[1][1].quiver(gps.lon, gps.lat, ogVec, fault_disp[2::3], scale=miniVecScale/5, color='g', label="fault contribution")
+    ax[1][1].quiverkey(Q5, X=0.3, Y=0.8, U=10, label="10 cm", labelpos='N', color='g')
+    ax[1][1].set_ylim([32.5, 45])
+    ax[1][1].set_xlim([129, 143.5])
 
     if saveFigures and dispSep:
         plt.savefig('dispByComponent.pdf')
@@ -242,6 +262,74 @@ def plotRatio(gps, totalCmiDisp, totalDisp, saveFigures, ratioFig) :
 
     if saveFigures and ratioFig:
         plt.savefig("ratioCmiToTotal.pdf")
+    
+    plt.close('all')
+
+    return
+
+def plotPercent(gps, predDisp, cmiDisp, saveFigures):
+    percent = 100*(cmiDisp/predDisp) #element wise division
+    percent_up = percent[2::3]
+    percent_east = percent[0::3]
+    percent_north = percent[1::3]
+
+    avgPercent = (percent_up + percent_north + percent_east)/3
+    lon_corr = 1 # longitude correction hardcoded to 1
+
+    coast = pd.read_csv("coastline.csv")
+
+    maxVal = 100
+    minVal = -100
+
+    # create masks for where the values are between -50-50%, these dots = more transparent, outliers = opaque plotting
+    # the mask returns true for percentages either greater than 50 or less than -50
+    avgMask = np.abs(avgPercent) > 50
+    upMask = np.abs(percent_up) > 50
+    eastMask = np.abs(percent_east) > 50
+    northMask = np.abs(percent_up) > 50
+
+    # convert to numpy arrays to use mask
+    gpsLon = np.array(gps.lon).reshape(-1,1)
+    gpsLat = np.array(gps.lat).reshape(-1,1)
+
+    plt.close('all')
+    fig, ax = plt.subplots(1,4, figsize=(20,5))
+    dots = ax[0].scatter(gpsLon[avgMask], gpsLat[avgMask], c=avgPercent[avgMask], vmin=minVal, vmax=maxVal, cmap="PiYG") # color by ratio of cmi_disp / total disp
+    ax[0].scatter(gpsLon[~avgMask], gpsLat[~avgMask], c=avgPercent[~avgMask], vmin=minVal, vmax=maxVal, cmap="PiYG", alpha=0.3) # flip the boolean mask to get the complement
+    ax[0].plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5)
+    ax[0].set_xlim(130, 145)
+    ax[0].set_ylim(33, 45)
+    ax[0].set_title("average percent")
+    # Add a customized colorbar
+    fig.colorbar(dots, ax=ax[0], orientation='vertical', shrink=0.7, extend='both')
+    
+    dots1 = ax[1].scatter(gpsLon[upMask], gpsLat[upMask], c=percent_up[upMask], vmin=minVal, vmax=maxVal, cmap="PiYG") # color by ratio of cmi_disp / total disp
+    ax[1].scatter(gpsLon[~upMask], gpsLat[~upMask], c=percent_up[~upMask], vmin=minVal, vmax=maxVal, cmap="PiYG", alpha=0.3)
+    ax[1].plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5)
+    ax[1].set_xlim(130, 145)
+    ax[1].set_ylim(33, 45)
+    ax[1].set_title("vertical percent")
+    fig.colorbar(dots1, ax=ax[1], orientation='vertical', shrink=0.7, extend='both')
+    
+    dots2 = ax[2].scatter(gpsLon[eastMask], gpsLat[eastMask], c=percent_east[eastMask], vmin=minVal, vmax=maxVal, cmap="PiYG") # color by ratio of cmi_disp / total disp
+    ax[2].scatter(gpsLon[~eastMask], gpsLat[~eastMask], c=percent_east[~eastMask], vmin=minVal, vmax=maxVal, cmap="PiYG", alpha=0.3) 
+    ax[2].plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5)
+    ax[2].set_xlim(130, 145)
+    ax[2].set_ylim(33, 45)
+    ax[2].set_title("east percent")
+    fig.colorbar(dots2, ax=ax[2], orientation='vertical', shrink=0.7, extend='both')
+    
+    dots3 = ax[3].scatter(gpsLon[northMask], gpsLat[northMask], c=percent_north[northMask], vmin=minVal, vmax=maxVal, cmap="PiYG") # color by ratio of cmi_disp / total disp
+    ax[3].scatter(gpsLon[~northMask], gpsLat[~northMask], c=percent_north[~northMask], vmin=minVal, vmax=maxVal, cmap="PiYG", alpha=0.3)
+    ax[3].plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5)
+    ax[3].set_xlim(130, 145)
+    ax[3].set_ylim(33, 45)
+    ax[3].set_title("north percent")
+    fig.colorbar(dots3, ax=ax[3], orientation='vertical', shrink=0.7, 
+                        label='percent disp from cmi', extend='both')
+
+    if saveFigures:
+        plt.savefig("percentCmi.pdf")
     
     plt.close('all')
 
@@ -437,22 +525,22 @@ def numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, cmi, sav
     rmse = calcRMSE(predDisp, gps)
     faultMoment, cmiMoment = calcMoment(estSlip, allElemBegin, fault, cmi)
     avgFaultRake, avgCmiRake = rakeCalc(estSlip, allElemBegin)
-    percentFault, percentCmi = contributionsPercent(predDisp=predDisp, dispMat=dispMat, estSlip=estSlip, allElemBegin=allElemBegin)
+    percentFault, percentCmi, weightedFault, weightedCmi = contributionsPercent(predDisp=predDisp, dispMat=dispMat, estSlip=estSlip, allElemBegin=allElemBegin)
 
-    print("Maximum magnitude of fault slip (m): ", maxFaultMag)
-    print("Maximum magnitude of slip on cmi (m): ", maxCmiMag)
-    # calc done in slip distribution plotting
+    # print("Maximum magnitude of fault slip (m): ", maxFaultMag)
+    # print("Maximum magnitude of slip on cmi (m): ", maxCmiMag)
+    # # calc done in slip distribution plotting
 
-    print("Fault moment: ", faultMoment)
-    print("Horiz moment: ", cmiMoment)
+    # print("Fault moment: ", faultMoment)
+    # print("Horiz moment: ", cmiMoment)
 
-    print(f"root mean square residual: %.3f cm" % rmse)
+    # print(f"root mean square residual: %.3f cm" % rmse)
 
-    print("weighted average fault rake: ", avgFaultRake)
-    print("weighted average cmi rake: ", avgCmiRake)
+    # print("weighted average fault rake: ", avgFaultRake)
+    # print("weighted average cmi rake: ", avgCmiRake)
 
-    print("Percentage of displacements from afterslip: ", percentFault)
-    print("Percentage of displacements from cmi: ", percentCmi)
+    # print("Percentage of displacements from afterslip: ", percentFault)
+    # print("Percentage of displacements from cmi: ", percentCmi)
 
     # calc done in residual plotting
 
@@ -466,6 +554,8 @@ def numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, cmi, sav
     results["avgCmiRake (deg)"] = avgCmiRake
     results["percentCmi"] = percentCmi
     results["percentFault"] = percentFault
+    results["weightedPercentFault"] = weightedFault
+    results["weightedPercentCmi"] = weightedCmi
 
     if (saveData) :
         with open("numericalResults.txt", "w") as file:
@@ -508,46 +598,21 @@ def rakeCalc(estSlip, allElemBegin) :
 # compared to total percentage of displacements that
 # the afterslip is contributing
 # the percentages are calculated component (e/n/u) wise because trying to calc percentages using the total displacement vector
-# magnitude compounds rounding differences from np.float64
+# magnitude compounds rounding differences from np.float64 (or another error occurred)
 # for a specific run of D40_SU_Testing/test0 the differences were
-# sum(predDisp - cmiDisp - faultDisp) = 7.8402...e-15
-# sum(totalDisp - totalCmiDisp - totalFaultDisp) = -261.972...
-# where totalDisp and the others were the square root of the summed squares of the component displacements (i.e., the magnitude of the displacement vector in R3)
 def contributionsPercent(predDisp, dispMat, estSlip, allElemBegin) :
-    predDisp2 = np.hstack((dispMat[:, allElemBegin[0]:allElemBegin[1]], dispMat[:, allElemBegin[1]:allElemBegin[2]])).dot(np.vstack((estSlip[allElemBegin[0]:allElemBegin[1]], estSlip[allElemBegin[1]:allElemBegin[2]])))
-    # print(np.all(predDisp == predDisp2))
-    
-    # square the components
-    east_disp = np.square(predDisp[0::3]).T
-    north_disp = np.square(predDisp[1::3]).T
-    vertical_disp = np.square(predDisp[2::3]).T
-
-    # add together north, east, and vertical disp, sum down column, take square root for magnitude of displacement for each station
-    totalDisp = np.sqrt(np.sum(np.vstack((east_disp, north_disp, vertical_disp)), axis=0))
-
     # calc disp from cmi, beginning from the cmi elements to the end of the cmi elements
     cmi_disp = dispMat[:, allElemBegin[1]:allElemBegin[2]].dot(estSlip[allElemBegin[1]:allElemBegin[2]]) 
-    cmi_e = np.square(cmi_disp[0::3]).T # square components
-    cmi_n = np.square(cmi_disp[1::3]).T
-    cmi_u = np.square(cmi_disp[2::3]).T
-    totalCmiDisp = np.sqrt(np.sum(np.vstack((cmi_e, cmi_n, cmi_u)), axis=0))
-
+   
     # fault disp
     fault_disp = dispMat[:, allElemBegin[0]:allElemBegin[1]].dot(estSlip[allElemBegin[0]:allElemBegin[1]])
 
-    # print("predicted east displacement: ", predDisp[0,0])
-    # print("Predicted east motion from cmi slip: ", cmi_disp[0,0])
-    # print("Predicted east motion from fault slip: ", fault_disp[0,0])
-    # print("Difference in predicted east motions: ", predDisp[0,0] - cmi_disp[0,0] - fault_disp[0,0])
-    # print("Difference in predicted north displacements: ", predDisp[1,0] - cmi_disp[1,0] - fault_disp[1,0])
-    # print("Differences in predicted vertical displacements: ", predDisp[2,0] - cmi_disp[2,0] - fault_disp[2,0])
-    # print("total magnitude of displacement vector: ", totalDisp[0])
-    # print("total disp mag from cmi slip: ", totalCmiDisp[0])
-    # print("total disp mag from afterslip: ", totalFaultDisp[0])
-    # print("difference in vector magnitudes: ", totalDisp[0] - totalCmiDisp[0] - totalFaultDisp[0])
+    with open('cmiDisp.npy', 'wb') as f:
+        np.save(f, cmi_disp)
+    with open('faultDisp.npy', 'wb') as f:
+        np.save(f, fault_disp)
 
-    # print("summed component wise value subtractions: ", np.sum(predDisp - fault_disp - cmi_disp))
-    # print("summed vector differences: ", np.sum(totalDisp - totalCmiDisp - totalFaultDisp))
+    
 
     # for each station, calculate the percentage of cmi and the percentage of fault contributions
 
@@ -555,19 +620,17 @@ def contributionsPercent(predDisp, dispMat, estSlip, allElemBegin) :
     cmiPercentage = (cmi_disp / predDisp) * 100
     faultPercentage = (fault_disp / predDisp) * 100
 
-    # negative percentages mean "canceling out"
-    # given 100% to the more influential element
-    # positive elements are more influential because they have the same sense motion as pred_disp
-    print(len(cmiPercentage))
-    for i in range(len(cmiPercentage)) :
-        if (cmiPercentage[i,0]<0) :
-            faultPercentage[i,0] = 100
-            cmiPercentage[i,0] = 0
-        if (faultPercentage[i,0]<0) :
-            cmiPercentage[i,0] = 100
-            faultPercentage[i,0] = 0
-    
+    # for each given station, find the percent contributed by cmi and the percent from the fault
+    # then, average each mechanisms contribution across all the stations
     totalCmiPercent = np.sum(cmiPercentage) / cmiPercentage.size
     totalFaultPercent = np.sum(faultPercentage) / faultPercentage.size
 
-    return totalFaultPercent, totalCmiPercent
+    weightedFaultPercent = np.average(faultPercentage, weights=np.abs(predDisp))
+    weightedCmiPercent = np.average(cmiPercentage, weights=np.abs(predDisp))
+
+    print("Percent fault: ", totalFaultPercent)
+    print("Percent cmi: ", totalCmiPercent)
+    print("weighted fault percent: ", weightedFaultPercent)
+    print("weighted cmi percent: ", weightedCmiPercent)
+
+    return totalFaultPercent, totalCmiPercent, weightedFaultPercent, weightedCmiPercent
