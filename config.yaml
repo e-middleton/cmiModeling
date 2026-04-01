@@ -1,13 +1,10 @@
-
-cmiDepth : 60 # cmi depth
-
-planeDepth : 60 # clipping plane for the subduction zone, same as cmiDepth unless using a "cold nose" model
+planeDepth : 80 # clipping plane for the subduction zone, same as cmiDepth unless using a "cold nose" model
 
 spatiallyVariable : False
 
 smoothing : 
-  fault : 1.0e+14
-  cmi : 1.0e+12
+  fault : 4.0e+14
+  cmi : 1.0e+16
 
 cmi :
   minLon : 125
