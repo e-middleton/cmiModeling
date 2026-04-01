@@ -80,9 +80,17 @@ def expandMesh(mesh) : # where mesh is a dictionary object
     mesh["dip_flag"] = mesh["dip"] != 90
 
     # calc mesh areas
-    # area of a triangle in coord geometry =  (1/2) |x1(y2 − y3) + x2(y3 − y1) + x3(y1 − y2)|
 
-    mesh["area"] = (1/2) * np.abs( (mesh["x1"]*(mesh["y2"] - mesh["y3"])) + (mesh["x2"]*(mesh["y3"]-mesh["y1"])) + (mesh["x3"]*(mesh["y1"] - mesh["y2"])) )
+    mesh["cart1"] = np.hstack((np.array(mesh["x1"]).reshape(-1,1), np.array(mesh["y1"]).reshape(-1,1), np.array(mesh["z1"]).reshape(-1,1)))
+    mesh["cart2"] = np.hstack((np.array(mesh["x2"]).reshape(-1,1), np.array(mesh["y2"]).reshape(-1,1), np.array(mesh["z2"]).reshape(-1,1)))
+    mesh["cart3"] = np.hstack((np.array(mesh["x3"]).reshape(-1,1), np.array(mesh["y3"]).reshape(-1,1), np.array(mesh["z3"]).reshape(-1,1)))
+
+    mesh["ab"] = mesh["cart2"] - mesh["cart1"]
+    mesh["ac"] = mesh["cart3"] - mesh["cart1"]
+    
+
+    mesh["cross"] = np.cross(mesh["ab"], mesh["ac"])
+    mesh["area"] = 0.5*np.sqrt(np.square(mesh["cross"][:, 0])+np.square(mesh["cross"][:, 1])+np.square(mesh["cross"][:, 2]))
 
     return mesh # return the modified mesh dictionary
 
