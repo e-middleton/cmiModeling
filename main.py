@@ -131,8 +131,9 @@ def main() :
 
     # finds the locations of top and side elements in the fault mesh
     # add ones in the constraint matrices for where slip is to be minimized/not allowed
-    # faultConstraint = constrain(fault, "top_elements", "side_elements", dispMat, False)
-    faultConstraint = constrain(fault,"side_elements", "", dispMat, False)
+    faultConstraint = constrain(fault, "top_elements", "side_elements", dispMat, False)
+
+    # faultConstraint = constrain(fault,"side_elements", "", dispMat, False) # ignore top constraint
 
     # CMI element indicies need to be shifted by the number of fault elements
     shift = 2*len(fault["lon1"]) # two not three because tensile col has already been removed from fault elements
@@ -225,7 +226,7 @@ def main() :
     # # # calls plotRatio
     # displacements(dispMat, allElemBegin, estSlip, predDisp, gps, vecScale, config["results"]["saveFigures"], 
     #             config["results"]["allDisp"], config["results"]["dispSep"], config["results"]["ratioFig"])
-    afterslip(estSlip=estSlip, fault=fault)
+    # afterslip(estSlip=estSlip, fault=fault)
     
     # # # plotLikeDiao(gps, predDisp, length, scale, dispMat, estSlip, allElemBegin, 58, config["results"]["saveFigures"], False)
     # residualPlot(gps, predDisp, vecScale, config["results"]["saveFigures"], config["results"]["residFig"])
@@ -233,7 +234,7 @@ def main() :
     
     # # numerical data
 
-    # numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, horiz, config["results"]["saveData"])
+    numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, horiz, config["results"]["saveData"])
 
     # # save config settings, just in case they're forgotten later and images are referenced
     # if (config["results"]["saveFigures"] or config["results"]["saveData"]):
