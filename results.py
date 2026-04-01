@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import colors
 import pandas as pd
 import json
 import yaml
@@ -116,7 +117,8 @@ def afterslip(estSlip, fault):
     lon_corr = 1
     # dip slip on the CMI represents east-west motion, where east is negative and west is positive
     slip_type = 1 # 0 = strike slip 1 = dip slip, only for CMI, 2 (manual) is vertical/tensile
-    end_idx = 2* len(fault["lon1"]) #end of fault elem beginning of cmi elem
+    end_idx = 2*len(fault["lon1"]) #end of fault elem beginning of cmi elem
+    
     dip_slip_vals = np.array(estSlip[slip_type:end_idx:2]/100) # dip slip values for fault only
     strike_slip_vals = np.array(estSlip[0:end_idx:2]/100)
 
@@ -139,12 +141,17 @@ def afterslip(estSlip, fault):
     ax[0].set_ylabel("Latitude")
     ax[0].set_xlabel("Longitude")
 
-    rso2 = ax[1].tripcolor(fault["points"][:,0], fault["points"][:,1], fault["verts"], facecolors=fault["centroids"][:,2])
-    cbar2 = fig.colorbar(rso2, ax=ax[1], orientation='vertical')
-    cbar2.set_label('Depth (km)')
+    custom_colors = ['white', 'lightsteelblue', 'royalblue', 'blue']
+    cmap = colors.ListedColormap(custom_colors)
+    maxSlip = np.max(slip)
+    bounds = [1, maxSlip-1, maxSlip-1, maxSlip-0.1, maxSlip+0.1] 
+    norm = colors.BoundaryNorm(bounds, cmap.N)
+    rso2 = ax[1].tripcolor(fault["points"][:,0], fault["points"][:,1], fault["verts"], facecolors=(slip).flatten(), cmap=cmap,norm=norm)
+    cbar2 = fig.colorbar(rso2, ax=ax[1], boundaries=bounds,orientation='vertical')
+    cbar2.set_label('+- 0.1 * max slip')
     ax[1].plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5)
     ax[1].set(xlim=(xmin-2, xmax), ylim=(ymin, ymax), aspect='equal')
-    ax[1].title.set_text("Fault depth") #graph 2
+    ax[1].title.set_text("Max Slip Location") #graph 2
 
     plt.savefig("afterslip.pdf")
     plt.close('all')
@@ -496,8 +503,8 @@ def calcRMSE(predDisp, gps):
     return rmse
 
 def calcMoment(estSlip, allElemBegin, fault, cmi):
-    # calculate the moment for slip on fault vs slip on cmi
-    # moment = rigidity x area x slip
+    '''calculate the moment for slip on fault vs slip on cmi
+        moment = rigidity x area x slip'''
 
     rigidity = 3e10 #N / m^2 (is this the same though for the CMI at depth?)
 
@@ -505,14 +512,14 @@ def calcMoment(estSlip, allElemBegin, fault, cmi):
     # calc slip mag
     fault_d_slip = np.square(estSlip[1:allElemBegin[1]:2]) # one for dip slip
     fault_s_slip = np.square(estSlip[0:allElemBegin[1]:2]) # zero for strike slip
-    faultSlip = np.sqrt(np.sum(np.vstack((fault_d_slip, fault_s_slip))))
+    faultSlip = np.sqrt(np.sum(np.vstack((fault_d_slip, fault_s_slip)), axis=0))/100 # convert cm -> m
 
     faultMoment = rigidity * (fault["area"]) * faultSlip
-    faultTotalMoment = np.sum(faultMoment) # in N / m^2
+    faultTotalMoment = np.sum(faultMoment) # in Nm
 
     cmi_d_slip = np.square(estSlip[1+allElemBegin[1]::3])
     cmi_s_slip = np.square(estSlip[0+allElemBegin[1]::3])
-    cmiSlip = np.sqrt(np.sum(np.vstack((cmi_d_slip, cmi_s_slip))))
+    cmiSlip = np.sqrt(np.sum(np.vstack((cmi_d_slip, cmi_s_slip)), axis=0))/100
 
     cmiMoment = rigidity * (cmi["area"]) * cmiSlip
     cmiTotalMoment = np.sum(cmiMoment)
@@ -571,9 +578,10 @@ def saveConfig(config):
     return
 
 
-# calculates the average rake value for the cmi and fault
-# using the slip magnitude to weight the rake value of the given element
 def rakeCalc(estSlip, allElemBegin) :
+    '''calculates the average rake value for the cmi and fault
+    using the slip magnitude to weight the rake value of the given element'''
+
     # Slip magnitude weighted average of rake # (lots of slip = we trust it more)
     faultDipSlip = estSlip[1:allElemBegin[1]:2] # one for dip slip
     faultStrikeSlip = estSlip[0:allElemBegin[1]:2] # zero for strike slip
@@ -593,14 +601,12 @@ def rakeCalc(estSlip, allElemBegin) :
     return weightedFaultRake, weightedCmiRake
 
 
-# function for returning the percentage of total 
-# displacement that the cmi is responsible for
-# compared to total percentage of displacements that
-# the afterslip is contributing
-# the percentages are calculated component (e/n/u) wise because trying to calc percentages using the total displacement vector
-# magnitude compounds rounding differences from np.float64 (or another error occurred)
-# for a specific run of D40_SU_Testing/test0 the differences were
 def contributionsPercent(predDisp, dispMat, estSlip, allElemBegin) :
+    ''' function for returning the percentage of total displacement that the cmi is responsible for
+    compared to total percentage of displacements that the afterslip is contributing
+    the percentages are calculated component (e/n/u) wise because trying to calc percentages 
+    using the total displacement vector magnitude compounds rounding differences from np.float64'''
+
     # calc disp from cmi, beginning from the cmi elements to the end of the cmi elements
     cmi_disp = dispMat[:, allElemBegin[1]:allElemBegin[2]].dot(estSlip[allElemBegin[1]:allElemBegin[2]]) 
    
