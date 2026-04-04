@@ -15,9 +15,9 @@ constraint :
   cmiEdge : 5.0e+2
 
 inputs :
-  fault : "japan.msh"
-  cmi : "horiz"               # written by meshCmi in prepareMeshes.py
-  gps : "cumulative_disp_seafloor.txt"
+  fault : "./mesh/japan.msh"
+  cmi : "./mesh/horiz.msh"               # written by meshCmi in prepareMeshes.py
+  gps : "./data/cumulative_disp_seafloor.txt"
 
 results :
   saveFigures : True # true false figures saved to current directory
@@ -28,3 +28,4 @@ results :
   residFig : True # displacement residuals figure
   saveData: True # numerical data results
   testName : ""
+  outputDir: ""

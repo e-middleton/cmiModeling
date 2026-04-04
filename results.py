@@ -8,9 +8,14 @@ import yaml
 # global
 coast = pd.read_csv("./data/coastline.csv")
 
-def slipDist(estSlip, gps, fault, cmi, vecScale, slipDist=False, saveFigures=False) :
+def slipDist(estSlip, gps, fault, cmi, vecScale, config) :
     '''Plots the slip distribution for both the cmi alone with gps vectors
     and the fault connected to the cmi without gps vectors'''
+
+    # unpack config data
+    saveFigures = config["results"]["saveFigures"]
+    slipDist = config["results"]["slipDist"]
+    outputDir = config["results"]["outputDir"]
     
     # plot for visualizing
     xmin = 122
@@ -61,13 +66,14 @@ def slipDist(estSlip, gps, fault, cmi, vecScale, slipDist=False, saveFigures=Fal
     ax[1].set_xlabel("Longitude")
 
     if saveFigures and slipDist:
-        plt.savefig('slip_dist.pdf') # save the figure
+        plt.savefig(outputDir + '/slip_dist.pdf') # save the figure
     
     plt.close('all')
 
     return
 
-def observedCalculated(predDisp, gps, vecScale, estSlip, fault):
+def observedCalculated(predDisp, gps, vecScale, estSlip, fault, config):
+    outputDir = config["results"]["outputDir"]
     xmin = 130
     xmax = 144
     ymin = 32
@@ -96,22 +102,21 @@ def observedCalculated(predDisp, gps, vecScale, estSlip, fault):
     ax.set_ylabel("Latitude")
     ax.set_xlabel("Longitude")
     plt.legend()
-    plt.savefig("calcObs2.pdf")
+    plt.savefig(outputDir + "/calcObs2.pdf")
     plt.close("all")
-
     return
 
 
-def afterslip(estSlip, fault):
+def afterslip(estSlip, fault, config):
     '''plots the afterslip distribution along the subduction zone,
     side by side with a plot showing the location of the peak afterslip'''
 
+    outputDir = config["results"]["outputDir"]
     # plot for visualizing
     xmin = 140
     xmax = 148
     ymin = 32
     ymax = 48
-    plt.close('all')
 
     # dip slip on the CMI represents east-west motion, where east is negative and west is positive
     slip_type = 1 # 0 = strike slip 1 = dip slip, only for CMI, 2 (manual) is vertical/tensile
@@ -151,15 +156,19 @@ def afterslip(estSlip, fault):
     ax[1].set(xlim=(xmin-2, xmax), ylim=(ymin, ymax), aspect='equal')
     ax[1].title.set_text("Max Slip Location") #graph 2
 
-    plt.savefig("afterslip.pdf")
-    plt.close('all')
-
+    plt.savefig(outputDir + "/afterslip.pdf")
     return
 
 
-def displacements(dispMat, allElemBegin, estSlip, predDisp, gps, vecScale, saveFigures=False, allDisp =False, dispSep=False, ratioFig=False) :
+def displacements(dispMat, allElemBegin, estSlip, predDisp, gps, vecScale, config) :
     '''plot displacements, including observed, predicted, and displacements separated
     by the component (i.e., displacement from CMI and displacement from fault)'''
+
+    saveFigures = config["results"]["saveFigures"]
+    allDisp = config["results"]["allDisp"]
+    dispSep = config["results"]["dispSep"]
+    ratioFig = config["results"]["ratioFig"]
+    outputDir = config["results"]["outputDir"]
     # calculate displacements by which components
     ### VECTOR STYLING ###
     miniVecScale = 500 # mini vec scale used for shorter vectors
@@ -188,8 +197,8 @@ def displacements(dispMat, allElemBegin, estSlip, predDisp, gps, vecScale, saveF
     fault_n = np.square(fault_disp[1::3]).reshape(1,-1)
     totalFaultDisp = np.sqrt(np.sum(np.vstack((fault_e, fault_n)), axis=0))
 
-    plotRatio(gps, totalCmiDisp, totalDisp, saveFigures, ratioFig)
-    plotPercent(gps, predDisp, cmi_disp, saveFigures)
+    plotRatio(gps, totalCmiDisp, totalDisp, saveFigures, ratioFig, outputDir)
+    plotPercent(gps, predDisp, cmi_disp, saveFigures, outputDir)
 
     fig, ax = plt.subplots(1, 2, figsize=(10,5))
     ax[0].plot(coast.lon, coast.lat, color="k", linewidth=0.5)
@@ -217,7 +226,7 @@ def displacements(dispMat, allElemBegin, estSlip, predDisp, gps, vecScale, saveF
     ax[1].legend()
 
     if saveFigures and allDisp:
-        plt.savefig('totalDisp.pdf')
+        plt.savefig(outputDir + '/totalDisp.pdf')
 
     miniVecScale = 500
 
@@ -265,14 +274,14 @@ def displacements(dispMat, allElemBegin, estSlip, predDisp, gps, vecScale, saveF
     ax[1].legend()
 
     if saveFigures and dispSep:
-        plt.savefig('dispByComponent.pdf')
+        plt.savefig(outputDir + '/dispByComponent.pdf')
     
     plt.close('all')
     return
 
 
 # plot the ratio of displacement due to cmi vs total displacements
-def plotRatio(gps, totalCmiDisp, totalDisp, saveFigures, ratioFig) :
+def plotRatio(gps, totalCmiDisp, totalDisp, saveFigures, ratioFig, outputDir) :
     ratio = totalCmiDisp / totalDisp
 
     plt.close('all')
@@ -286,13 +295,13 @@ def plotRatio(gps, totalCmiDisp, totalDisp, saveFigures, ratioFig) :
                         label='Ratio of cmi:total', extend='both')
 
     if saveFigures and ratioFig:
-        plt.savefig("ratioCmiToTotal.pdf")
+        plt.savefig(outputDir + "/ratioCmiToTotal.pdf")
     
     plt.close('all')
 
     return
 
-def plotPercent(gps, predDisp, cmiDisp, saveFigures):
+def plotPercent(gps, predDisp, cmiDisp, saveFigures, outputDir):
     percent = 100*(cmiDisp/predDisp) #element wise division
     percent_up = percent[2::3]
     percent_east = percent[0::3]
@@ -351,14 +360,18 @@ def plotPercent(gps, predDisp, cmiDisp, saveFigures):
                         label='percent disp from cmi', extend='both')
 
     if saveFigures:
-        plt.savefig("percentCmi.pdf")
+        plt.savefig(outputDir + "/percentCmi.pdf")
     
     plt.close('all')
 
     return
 
 
-def residualPlot(gps, predDisp, vecScale, saveFigures=False, residFig=False) :
+def residualPlot(gps, predDisp, vecScale, config) :
+    saveFigures = config["results"]["saveFigures"]
+    residFig = config["results"]["residFig"]
+    outputDir = config["results"]["outputDir"]
+
     # calculate gps displacement residuals
     # residual = actual - predicted
      ### VECTOR STYLING ###
@@ -366,8 +379,6 @@ def residualPlot(gps, predDisp, vecScale, saveFigures=False, residFig=False) :
     headLength = 2
     headAxisLength=2
     headWidth = 3
-
-    coast = pd.read_csv("coastline.csv")
 
     residuals = np.empty((len(gps.lon), 3))
     actual = np.hstack((np.array(gps.east_vel).reshape(-1,1), np.array(gps.north_vel).reshape(-1,1), np.array(gps.up_vel).reshape(-1,1)))
@@ -402,7 +413,7 @@ def residualPlot(gps, predDisp, vecScale, saveFigures=False, residFig=False) :
     plt.title("residual displacements (vertical)")
 
     if saveFigures and residFig:
-        plt.savefig("residuals.pdf")
+        plt.savefig(outputDir + "/residuals.pdf")
     
     plt.close('all')
 
@@ -411,7 +422,10 @@ def residualPlot(gps, predDisp, vecScale, saveFigures=False, residFig=False) :
 
 # method to output plots similar in style to Diao et al.
 # observed displacement, cal_afterslip, cal_cmi, residual (horiz)
-def plotLikeDiao(gps, predDisp, vectorLength, vecScale, dispMat, estSlip, allElemBegin, numDays, saveFigures=False, ratioFig=False) :
+def plotLikeDiao(gps, predDisp, vectorLength, vecScale, dispMat, estSlip, allElemBegin, numDays, config) :
+    saveFigures = config["results"]["saveFigures"]
+    ratioFig = config["results"]["ratioFig"]
+    outputDir = config["results"]["outputDir"]
 
     residuals = np.empty((len(gps.lon), 3))
     actual = np.hstack((np.array(gps.east_vel).reshape(-1,1), np.array(gps.north_vel).reshape(-1,1), np.array(gps.up_vel).reshape(-1,1)))
@@ -490,7 +504,7 @@ def plotLikeDiao(gps, predDisp, vectorLength, vecScale, dispMat, estSlip, allEle
 
     fig.subplots_adjust(wspace=0, hspace=0)
 
-    plt.savefig("diaoFormattedDisplacements.pdf")
+    plt.savefig(outputDir + "/diaoFormattedDisplacements.pdf")
     plt.close('all')
 
     return
@@ -550,12 +564,15 @@ def calcMoment(estSlip, allElemBegin, fault, cmi):
     return faultTotalMoment, cmiTotalMoment
 
 
-def numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, cmi, saveData):
+def numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, cmi, config):
+    saveData = config["results"]["saveData"]
+    outputDir = config["results"]["outputDir"]
+
     maxFaultMag, maxCmiMag = maxSlipMag(estSlip, allElemBegin)
     rmse = calcRMSE(predDisp, gps)
     faultMoment, cmiMoment = calcMoment(estSlip, allElemBegin, fault, cmi)
     avgFaultRake, avgCmiRake = rakeCalc(estSlip, allElemBegin)
-    percentFault, percentCmi, weightedFault, weightedCmi = contributionsPercent(predDisp=predDisp, dispMat=dispMat, estSlip=estSlip, allElemBegin=allElemBegin)
+    percentFault, percentCmi, weightedFault, weightedCmi = contributionsPercent(predDisp=predDisp, dispMat=dispMat, estSlip=estSlip, allElemBegin=allElemBegin, outputDir=outputDir)
 
     results = {}
     results["faultMaxMag (m)"] = maxFaultMag
@@ -571,7 +588,7 @@ def numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, cmi, sav
     results["weightedPercentCmi"] = weightedCmi
 
     if (saveData) :
-        with open("numericalResults.txt", "w") as file:
+        with open(outputDir + "/numericalResults.txt", "w") as file:
             file.write(json.dumps(results, indent=4, sort_keys=True))
 
     return
@@ -579,7 +596,7 @@ def numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, cmi, sav
 
 # save current config settings for later reference
 def saveConfig(config):
-    with open('configSettings.yaml', 'w') as file:
+    with open(config["results"]["outputDir"] + '/configSettings.yaml', 'w') as file:
         yaml.dump(config, file, default_flow_style=False)
     return
 
@@ -606,7 +623,7 @@ def rakeCalc(estSlip, allElemBegin) :
     return weightedFaultRake, weightedCmiRake
 
 
-def contributionsPercent(predDisp, dispMat, estSlip, allElemBegin) :
+def contributionsPercent(predDisp, dispMat, estSlip, allElemBegin, outputDir) :
     ''' function for returning the percentage of total displacement that the cmi is responsible for
     compared to total percentage of displacements that the afterslip is contributing
     the percentages are calculated component (e/n/u) wise because trying to calc percentages 
@@ -618,9 +635,9 @@ def contributionsPercent(predDisp, dispMat, estSlip, allElemBegin) :
     # fault disp
     fault_disp = dispMat[:, allElemBegin[0]:allElemBegin[1]].dot(estSlip[allElemBegin[0]:allElemBegin[1]])
 
-    with open('cmiDisp.npy', 'wb') as f:
+    with open(outputDir + '/cmiDisp.npy', 'wb') as f:
         np.save(f, cmi_disp)
-    with open('faultDisp.npy', 'wb') as f:
+    with open(outputDir + '/faultDisp.npy', 'wb') as f:
         np.save(f, fault_disp)
 
     # for each station, calculate the percentage of cmi and the percentage of fault contributions
