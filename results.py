@@ -6,8 +6,7 @@ import json
 import yaml
 
 # global
-coast = pd.read_csv("coastline.csv")
-lon_corr = 1
+coast = pd.read_csv("./data/coastline.csv")
 
 def slipDist(estSlip, gps, fault, cmi, vecScale, slipDist=False, saveFigures=False) :
     '''Plots the slip distribution for both the cmi alone with gps vectors
@@ -45,7 +44,7 @@ def slipDist(estSlip, gps, fault, cmi, vecScale, slipDist=False, saveFigures=Fal
                         vmin=-max_mag, vmax=max_mag)
 
     cbar1 = fig.colorbar(rso, ax=ax[0], orientation='horizontal')
-    ax[0].plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5)
+    ax[0].plot(coast.lon, coast.lat, color="k", linewidth=0.5)
     cbar1.set_label("Slip (m)")
     ax[0].set(xlim=(xmin-2, xmax), ylim=(ymin, ymax), aspect='equal')
     ax[0].title.set_text("Fault Dip Slip") #graph 1
@@ -74,9 +73,6 @@ def observedCalculated(predDisp, gps, vecScale, estSlip, fault):
     ymin = 32
     ymax = 43
 
-    coast = pd.read_csv("coastline.csv")
-    lon_corr = 1
-
     # dip slip on the CMI represents east-west motion, where east is negative and west is positive
     slip_type = 1 # 0 = strike slip 1 = dip slip, only for CMI, 2 (manual) is vertical/tensile
     end_idx = 2* len(fault["lon1"]) #end of fault elem beginning of cmi elem
@@ -92,7 +88,7 @@ def observedCalculated(predDisp, gps, vecScale, estSlip, fault):
                         vmin=-maxMag, vmax=maxMag)
     cbar1 = fig.colorbar(rso, ax=ax, orientation='vertical')
     cbar1.set_label("Dip Slip (m)")
-    ax.plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5)
+    ax.plot(coast.lon, coast.lat, color="k", linewidth=0.5)
     Q = ax.quiver(gps.lon, gps.lat, gps.east_vel, gps.north_vel, scale=vecScale, color='k', label="observed")
     ax.quiverkey(Q, X=0.3, Y=0.8, U=50, label="50 cm", labelpos='N', color='k')
     ax.quiver(gps.lon, gps.lat, predDisp[0::3], predDisp[1::3], scale=vecScale, color='r', label="predicted")
@@ -117,8 +113,6 @@ def afterslip(estSlip, fault):
     ymax = 48
     plt.close('all')
 
-    coast = pd.read_csv("coastline.csv")
-    lon_corr = 1
     # dip slip on the CMI represents east-west motion, where east is negative and west is positive
     slip_type = 1 # 0 = strike slip 1 = dip slip, only for CMI, 2 (manual) is vertical/tensile
     end_idx = 2*len(fault["lon1"]) #end of fault elem beginning of cmi elem
@@ -138,7 +132,7 @@ def afterslip(estSlip, fault):
                         facecolors=(slip).flatten(), 
                         vmin=-6, vmax=6)
     cbar1 = fig.colorbar(rso, ax=ax[0], orientation='vertical')
-    ax[0].plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5)
+    ax[0].plot(coast.lon, coast.lat, color="k", linewidth=0.5)
     cbar1.set_label("Slip (m)")
     ax[0].set(xlim=(xmin-2, xmax), ylim=(ymin, ymax), aspect='equal')
     ax[0].title.set_text("Fault Slip") #graph 1
@@ -153,7 +147,7 @@ def afterslip(estSlip, fault):
     rso2 = ax[1].tripcolor(fault["points"][:,0], fault["points"][:,1], fault["verts"], facecolors=(slip).flatten(), cmap=cmap,norm=norm)
     cbar2 = fig.colorbar(rso2, ax=ax[1], boundaries=bounds,orientation='vertical')
     cbar2.set_label('slip magnitude (m)')
-    ax[1].plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5)
+    ax[1].plot(coast.lon, coast.lat, color="k", linewidth=0.5)
     ax[1].set(xlim=(xmin-2, xmax), ylim=(ymin, ymax), aspect='equal')
     ax[1].title.set_text("Max Slip Location") #graph 2
 
@@ -174,8 +168,6 @@ def displacements(dispMat, allElemBegin, estSlip, predDisp, gps, vecScale, saveF
     headLength = 2
     headAxisLength=2
     headWidth = 3
-
-    coast = pd.read_csv("coastline.csv") 
 
     # square the components
     east_disp = np.square(predDisp[0::3]).reshape(1,-1)
@@ -282,14 +274,11 @@ def displacements(dispMat, allElemBegin, estSlip, predDisp, gps, vecScale, saveF
 # plot the ratio of displacement due to cmi vs total displacements
 def plotRatio(gps, totalCmiDisp, totalDisp, saveFigures, ratioFig) :
     ratio = totalCmiDisp / totalDisp
-    lon_corr = 1 # longitude correction hardcoded to 1
-
-    coast = pd.read_csv("coastline.csv")
 
     plt.close('all')
     fig, ax = plt.subplots()
     dots = ax.scatter(gps.lon, gps.lat, c=ratio) # color by ratio of cmi_disp / total disp
-    ax.plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5)
+    ax.plot(coast.lon, coast.lat, color="k", linewidth=0.5)
     ax.set_xlim(130, 145)
     ax.set_ylim(33, 45)
     # Add a customized colorbar
@@ -310,9 +299,6 @@ def plotPercent(gps, predDisp, cmiDisp, saveFigures):
     percent_north = percent[1::3]
 
     avgPercent = (percent_up + percent_north + percent_east)/3
-    lon_corr = 1 # longitude correction hardcoded to 1
-
-    coast = pd.read_csv("coastline.csv")
 
     maxVal = 100
     minVal = -100
@@ -332,7 +318,7 @@ def plotPercent(gps, predDisp, cmiDisp, saveFigures):
     fig, ax = plt.subplots(1,4, figsize=(20,5))
     dots = ax[0].scatter(gpsLon[avgMask], gpsLat[avgMask], c=avgPercent[avgMask], vmin=minVal, vmax=maxVal, cmap="PiYG") # color by ratio of cmi_disp / total disp
     ax[0].scatter(gpsLon[~avgMask], gpsLat[~avgMask], c=avgPercent[~avgMask], vmin=minVal, vmax=maxVal, cmap="PiYG", alpha=0.3) # flip the boolean mask to get the complement
-    ax[0].plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5)
+    ax[0].plot(coast.lon, coast.lat, color="k", linewidth=0.5)
     ax[0].set_xlim(130, 145)
     ax[0].set_ylim(33, 45)
     ax[0].set_title("average percent")
@@ -341,7 +327,7 @@ def plotPercent(gps, predDisp, cmiDisp, saveFigures):
     
     dots1 = ax[1].scatter(gpsLon[upMask], gpsLat[upMask], c=percent_up[upMask], vmin=minVal, vmax=maxVal, cmap="PiYG") # color by ratio of cmi_disp / total disp
     ax[1].scatter(gpsLon[~upMask], gpsLat[~upMask], c=percent_up[~upMask], vmin=minVal, vmax=maxVal, cmap="PiYG", alpha=0.3)
-    ax[1].plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5)
+    ax[1].plot(coast.lon, coast.lat, color="k", linewidth=0.5)
     ax[1].set_xlim(130, 145)
     ax[1].set_ylim(33, 45)
     ax[1].set_title("vertical percent")
@@ -349,7 +335,7 @@ def plotPercent(gps, predDisp, cmiDisp, saveFigures):
     
     dots2 = ax[2].scatter(gpsLon[eastMask], gpsLat[eastMask], c=percent_east[eastMask], vmin=minVal, vmax=maxVal, cmap="PiYG") # color by ratio of cmi_disp / total disp
     ax[2].scatter(gpsLon[~eastMask], gpsLat[~eastMask], c=percent_east[~eastMask], vmin=minVal, vmax=maxVal, cmap="PiYG", alpha=0.3) 
-    ax[2].plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5)
+    ax[2].plot(coast.lon, coast.lat, color="k", linewidth=0.5)
     ax[2].set_xlim(130, 145)
     ax[2].set_ylim(33, 45)
     ax[2].set_title("east percent")
@@ -357,7 +343,7 @@ def plotPercent(gps, predDisp, cmiDisp, saveFigures):
     
     dots3 = ax[3].scatter(gpsLon[northMask], gpsLat[northMask], c=percent_north[northMask], vmin=minVal, vmax=maxVal, cmap="PiYG") # color by ratio of cmi_disp / total disp
     ax[3].scatter(gpsLon[~northMask], gpsLat[~northMask], c=percent_north[~northMask], vmin=minVal, vmax=maxVal, cmap="PiYG", alpha=0.3)
-    ax[3].plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5)
+    ax[3].plot(coast.lon, coast.lat, color="k", linewidth=0.5)
     ax[3].set_xlim(130, 145)
     ax[3].set_ylim(33, 45)
     ax[3].set_title("north percent")
@@ -439,9 +425,6 @@ def plotLikeDiao(gps, predDisp, vectorLength, vecScale, dispMat, estSlip, allEle
     residuals[:,1] = actual[:,1] - calc_north
     residuals[:,2] = actual[:,2] - calc_up
 
-    coast = pd.read_csv("coastline.csv")
-    lon_corr = 1
-
     # square the components
     east_disp = np.square(predDisp[0::3]).reshape(1,-1)
     north_disp = np.square(predDisp[1::3]).reshape(1, -1)
@@ -467,7 +450,7 @@ def plotLikeDiao(gps, predDisp, vectorLength, vecScale, dispMat, estSlip, allEle
     # OBSERVED DISPLACEMENTS
     Q= ax[0].quiver(gps.lon, gps.lat, gps.east_vel/numDays, gps.north_vel/numDays, scale_units="xy", scale=vecScale, color='k', label='observed', width=arrowWidth)
     ax[0].quiverkey(Q, X = 0.3, Y=0.8, U=vectorLength, label='2 mm d-1',labelpos='N', color='k')
-    ax[0].plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5) # coastline
+    ax[0].plot(coast.lon, coast.lat, color="k", linewidth=0.5) # coastline
     ax[0].set_title("Observed displacements (cm)")
     ax[0].set_ylim([35, 41])
     ax[0].set_xlim([135, 143])
@@ -477,7 +460,7 @@ def plotLikeDiao(gps, predDisp, vectorLength, vecScale, dispMat, estSlip, allEle
 
     Q2 = ax[1].quiver(gps.lon, gps.lat, fault_disp[0::3]/numDays, fault_disp[1::3]/numDays, scale_units="xy", scale=vecScale, color='g', label="displacements from afterslip", width=arrowWidth)
     ax[1].quiverkey(Q2, X=0.3, Y=0.8, U=vectorLength, label="2 mm d-1", labelpos='N', color='g')
-    ax[1].plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5) # coastline
+    ax[1].plot(coast.lon, coast.lat, color="k", linewidth=0.5) # coastline
     ax[1].set_ylim([35, 41])
     ax[1].set_xlim([135, 143])
     ax[1].set_aspect('equal', adjustable='box')
@@ -487,7 +470,7 @@ def plotLikeDiao(gps, predDisp, vectorLength, vecScale, dispMat, estSlip, allEle
 
     Q3 = ax[2].quiver(gps.lon, gps.lat, cmi_disp[0::3]/numDays, cmi_disp[1::3]/numDays, scale_units="xy", scale=vecScale, color='b', label="displacements from cmi slip", width=arrowWidth)
     ax[2].quiverkey(Q3, X=0.3, Y=0.8, U=vectorLength, label="2 mm d-1", labelpos='N', color='b')
-    ax[2].plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5) # coastline
+    ax[2].plot(coast.lon, coast.lat, color="k", linewidth=0.5) # coastline
     ax[2].set_ylim([35, 41])
     ax[2].set_xlim([135, 143])
     ax[2].set_aspect('equal', adjustable='box')
@@ -498,7 +481,7 @@ def plotLikeDiao(gps, predDisp, vectorLength, vecScale, dispMat, estSlip, allEle
 
     Q4 = ax[3].quiver(gps.lon, gps.lat, residuals[:,0]/numDays, residuals[:,1]/numDays, scale_units="xy", scale=vecScale, color='r', label="residuals", width=arrowWidth)
     ax[3].quiverkey(Q4, X=0.3, Y=0.8, U=vectorLength, label="2 mm d-1", labelpos='N', color='r')
-    ax[3].plot(coast.lon+360*(1-lon_corr), coast.lat, color="k", linewidth=0.5) # coastline
+    ax[3].plot(coast.lon, coast.lat, color="k", linewidth=0.5) # coastline
     ax[3].set_ylim([35, 41])
     ax[3].set_xlim([135, 143])
     ax[3].set_aspect('equal', adjustable='box')

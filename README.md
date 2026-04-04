@@ -42,8 +42,6 @@ The testing folder should additionally contain numpy files for the predicted gps
 As a note, some plots, particularly diaoFormattedDisplacements in results.py might require manual updates for the axes titles and vector scaling numbers.
 Outputs will automatically be written to the current working directory and will ***not*** write to the results folder.
 
-***NOTE***: Longitude correction for calculations has been hardcoded to 1 (Hokkaido range), and assumes that the maximum longitude value of the meshes/coastline data is < 180.
-
 ## Data Sources
 GPS data in cumulative_disp.txt is from the first 2 years after the 2011 Tohoku-oki earthquake, from Hu et al. [doi:10.1186/1880-5981-66-106](https://link.springer.com/article/10.1186/1880-5981-66-106) in the Electronic Supplementary Material section
 
