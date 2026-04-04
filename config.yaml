@@ -1,6 +1,6 @@
-planeDepth : 80 # clipping plane for the subduction zone, same as cmiDepth unless using a "cold nose" model
+planeDepth : 80             # clipping plane for the subduction zone, sets cmi depth
 
-spatiallyVariable : False
+spatiallyVariable : False   # whether or not smoothing is uniform or spatially variable
 
 smoothing : 
   fault : 4.0e+14
@@ -12,21 +12,19 @@ cmi :
 
 constraint : 
   faultEdge : 1.0e+4
-  #faultSide : 1
-  #faultUpper: 1 # upper 20 km
   cmiEdge : 5.0e+2
 
 inputs :
   fault : "japan.msh"
-  cmi : "horiz" # written by meshCmi in prepareMeshes.py
-  gps : "cumulative_disp.txt"
+  cmi : "horiz"               # written by meshCmi in prepareMeshes.py
+  gps : "cumulative_disp_seafloor.txt"
 
 results :
-  saveFigures : True # true false figures saved to external directory
+  saveFigures : True # true false figures saved to current directory
   slipDist : True # slip distribution figure
   dispSep : True  # displacements separated by component (from cmi, from fault)
   allDisp : True # figure with total displacement, predicted and observed
   ratioFig : True # ratio of cmi displacement to total displacement
   residFig : True # displacement residuals figure
-  saveData: True # numerical data
+  saveData: True # numerical data results
   testName : ""
