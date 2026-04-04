@@ -391,7 +391,7 @@ def clipFault(bool_mask, depth_all, tri_elem, node_combo, num_extra, plane_depth
 
 
 
-def remeshFault(new_points, total_verts, mesh) :
+def remeshFault(new_points, total_verts, mesh, meshDir="./meshes/") :
     # remesh the clipped fault and interpolate depths based on original subduction zone mesh
 
     clipped = {}
@@ -434,18 +434,18 @@ def remeshFault(new_points, total_verts, mesh) :
     # Finish writing geo attributes
     gmsh.model.geo.synchronize()
 
-    gmsh.write('clipped_fault' + '.geo_unrolled')
+    gmsh.write(meshDir + 'clipped_fault' + '.geo_unrolled')
 
     # Generate mesh
     gmsh.model.mesh.generate(2) #meshed in spherical because the depth being in km isn't as important when it's flat
 
-    gmsh.write('clipped_fault' + '.msh')
+    gmsh.write(meshDir + 'clipped_fault' + '.msh')
     gmsh.finalize()  
 
 
     # Read and parse mesh
     fault = dict()
-    faultobj = meshio.read("clipped_fault.msh") 
+    faultobj = meshio.read(meshDir + "clipped_fault.msh") 
     fault["points"] = faultobj.points
     fault["verts"] = meshio.CellBlock("triangle", faultobj.get_cells_type("triangle")).data
 
@@ -462,7 +462,7 @@ def remeshFault(new_points, total_verts, mesh) :
 # create a mesh of the CMI based on the depth contour, and the corner points
 # provided in the config file along with the clipping plane depth
 # writes the file, does NOT return the object
-def meshCmi(depthContour, minLon, minLat, planeDepth, filename="horiz") :
+def meshCmi(depthContour, minLon, minLat, planeDepth, meshDir="./meshes/") :
 
     #sort points by increasing latitude
     indicies = np.argsort(depthContour[:,1])
@@ -515,11 +515,11 @@ def meshCmi(depthContour, minLon, minLat, planeDepth, filename="horiz") :
     # Finish writing geo attributes
     gmsh.model.geo.synchronize()
 
-    gmsh.write(filename + '.geo_unrolled')
+    gmsh.write(meshDir + 'horiz.geo_unrolled')
 
     # Generate mesh
     gmsh.model.mesh.generate(2) #meshed in spherical because the depth being in km isn't as important when it's flat
 
-    gmsh.write(filename + '.msh')
+    gmsh.write(meshDir + 'horiz.msh')
     gmsh.finalize() 
     return

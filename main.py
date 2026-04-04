@@ -4,8 +4,10 @@ from prepareMeshes import findContour, meshCmi, expandMesh
 from createMatrices import findEdgeElem, createDispSmoothMats, createIndexingLists, constrain
 import celeri
 from results import slipDist, displacements, residualPlot, numericalData, saveConfig, plotLikeDiao, afterslip, observedCalculated
+from results import slipDist, displacements, residualPlot, numericalData, saveConfig, plotLikeDiao, afterslip, observedCalculated
 import yaml, argparse
 from files_io import readMesh, readGPS
+from runInversion import runInversion, assembleWeights, removeFaultContribution
 from runInversion import runInversion, assembleWeights, removeFaultContribution
 
 ### SET MODEL CHOICES ###
@@ -24,7 +26,7 @@ def parseArgs() :
 
     parser.add_argument("--oldResults", action='store_true', help='Process the results of a past test.')
     parser.add_argument("--resultFolder", type=str, metavar='', help='Directory for the old test results.')
-
+    parser.add_argument("--outputDir", metavar='', default="./", help="output directory")
     parser.add_argument("--afterslipReinvert", action='store_true', help="Invert for cmi after removing fault afterslip displacements.")
     
     return parser.parse_args()
@@ -33,7 +35,7 @@ def main() :
     args = parseArgs()
 
     if (args.oldResults or args.afterslipReinvert) :
-        with open(args.resultFolder + '/configSettings.txt', 'r') as file:
+        with open(args.resultFolder + '/configSettings.yaml', 'r') as file:
             config = yaml.safe_load(file)
     else: 
         with open(args.config, "r") as file :
@@ -56,6 +58,8 @@ def main() :
         config["results"]["testName"] = args.testName
     if (args.gpsFile) :
         config["inputs"]["gps"] = args.gpsFile
+    if (args.gpsFile) :
+        config["inputs"]["gps"] = args.gpsFile
 
     print(config)
 
@@ -71,8 +75,8 @@ def main() :
 
     # ### MESH THE CMI BASED ON THE LOWER DEPTH EXTENT OF AFTERSLIP AND THE DEPTH CONTOUR ###
 
-    meshCmi(depthContour, config["cmi"]["minLon"], config["cmi"]["minLat"], config["planeDepth"], config["inputs"]["cmi"])
-    horiz = readMesh(config["inputs"]["cmi"] + ".msh") # read in mesh
+    meshCmi(depthContour, config["cmi"]["minLon"], config["cmi"]["minLat"], config["planeDepth"], meshDir='./meshes/')
+    horiz = readMesh('./meshes/horiz.msh') # read in mesh
     horiz = expandMesh(horiz) # expand mesh coordinates
 
     # ### INVERSION CODE ###
@@ -222,23 +226,19 @@ def main() :
     vecScale = 1500 # typical vector scaling for 2 year data
     vecScale2 = 1000 # scaling for comparing between observed and calc 2 yrs
 
-    # slipDist(estSlip, gps, fault, horiz, vecScale, config["results"]["saveFigures"], config["results"]["slipDist"])
-    # # # calls plotRatio
-    # displacements(dispMat, allElemBegin, estSlip, predDisp, gps, vecScale, config["results"]["saveFigures"], 
-    #             config["results"]["allDisp"], config["results"]["dispSep"], config["results"]["ratioFig"])
-    # afterslip(estSlip=estSlip, fault=fault)
+    slipDist(estSlip, gps, fault, horiz, vecScale, config)
+    # # calls plotRatio
+    displacements(dispMat, allElemBegin, estSlip, predDisp, gps, vecScale, config)
+    afterslip(estSlip=estSlip, fault=fault, config=config)
     
-    # # # plotLikeDiao(gps, predDisp, length, scale, dispMat, estSlip, allElemBegin, 58, config["results"]["saveFigures"], False)
-    # residualPlot(gps, predDisp, vecScale, config["results"]["saveFigures"], config["results"]["residFig"])
-    # observedCalculated(predDisp, gps, vecScale2, estSlip, fault)
+    residualPlot(gps, predDisp, vecScale, config)
+    observedCalculated(predDisp, gps, vecScale2, estSlip, fault, config)
     
-    # # numerical data
+    # numerical data
+
+    numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, horiz, config)
 
     numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, horiz, config["results"]["saveData"])
-
-    # # save config settings, just in case they're forgotten later and images are referenced
-    # if (config["results"]["saveFigures"] or config["results"]["saveData"]):
-    #     saveConfig(config)
 
 if __name__ == "__main__":
     main()
