@@ -23,10 +23,10 @@ def parseArgs() :
     parser.add_argument("--saveData", action='store_true', help="Enable numerical data saving")
     parser.add_argument("--testName", type=str, metavar='', help="Override test name")
     parser.add_argument("--gpsFile", type=str, metavar='', help="Override gps file")
-
+    parser.add_argument("--noTopConstraint", action='store_true', help="remove slip constraint on the top edge of the fault.")
     parser.add_argument("--oldResults", action='store_true', help='Process the results of a past test.')
     parser.add_argument("--resultFolder", type=str, metavar='', help='Directory for the old test results.')
-    parser.add_argument("--outputDir", metavar='', default="./", help="output directory")
+    parser.add_argument("--outputDir", metavar='', help="output directory")
     parser.add_argument("--afterslipReinvert", action='store_true', help="Invert for cmi after removing fault afterslip displacements.")
     
     return parser.parse_args()
@@ -50,14 +50,16 @@ def main() :
         config["smoothing"]["cmi"] = args.cmiSmoothing
     if (args.spatiallyVariable) :
         config["spatiallyVariable"] = True
+    if (args.noTopConstraint) :
+        config["constraint"]["noTopConstraint"] = True
     if (args.saveFigures) :
         config["results"]["saveFigures"] = True
     if (args.saveData) :
         config["results"]["saveData"] = True
     if (args.testName) :
         config["results"]["testName"] = args.testName
-    if (args.gpsFile) :
-        config["inputs"]["gps"] = args.gpsFile
+    if (args.outputDir) :
+        config["results"]["outputDir"] = args.outputDir
     if (args.gpsFile) :
         config["inputs"]["gps"] = args.gpsFile
 
@@ -107,20 +109,20 @@ def main() :
     # function automatically removes tensile rows and columns from the fault matrix in disp mat
     # and it then removes the corresponding rows and columns of smoothing mat, leaving it as a square matrix
 
-    faultDispMat, faultSmoothingMat = createDispSmoothMats(gps=gps, numTri=len(fault["lon1"]), meshes=[meshes[0]], isFault=True)
-    horizDispMat, horizSmoothingMat = createDispSmoothMats(gps=gps, numTri=len(horiz["lon1"]), meshes=[meshes[1]])
+    # faultDispMat, faultSmoothingMat = createDispSmoothMats(gps=gps, numTri=len(fault["lon1"]), meshes=[meshes[0]], isFault=True)
+    # horizDispMat, horizSmoothingMat = createDispSmoothMats(gps=gps, numTri=len(horiz["lon1"]), meshes=[meshes[1]])
 
-    # square matrix requires blocks of zeros to hold space
-    upperRightBlock = np.zeros((len(faultSmoothingMat[0]), len(horizSmoothingMat[0])))
-    lowerLeftBlock = np.zeros((len(horizSmoothingMat[0]), len(faultSmoothingMat[0])))
+    # # square matrix requires blocks of zeros to hold space
+    # upperRightBlock = np.zeros((len(faultSmoothingMat[0]), len(horizSmoothingMat[0])))
+    # lowerLeftBlock = np.zeros((len(horizSmoothingMat[0]), len(faultSmoothingMat[0])))
 
-    faultRow = np.hstack((faultSmoothingMat, upperRightBlock))
-    cmiRow = np.hstack((lowerLeftBlock, horizSmoothingMat))
+    # faultRow = np.hstack((faultSmoothingMat, upperRightBlock))
+    # cmiRow = np.hstack((lowerLeftBlock, horizSmoothingMat))
 
-    # stick together column wise
-    dispMat = np.hstack((faultDispMat, horizDispMat))
-    smoothingMat = np.vstack((faultRow, cmiRow))
-    # dispMat, smoothingMat = createDispSmoothMats(gps, np.sum(n_tri), elemBegin, elemEnd, meshes)
+    # # stick together column wise
+    # dispMat = np.hstack((faultDispMat, horizDispMat))
+    # smoothingMat = np.vstack((faultRow, cmiRow))
+    dispMat, smoothingMat = createDispSmoothMats(gps, np.sum(n_tri), elemBegin, elemEnd, meshes)
 
     # *function should built-in test for flattened elements hopefully
 
@@ -135,9 +137,11 @@ def main() :
 
     # finds the locations of top and side elements in the fault mesh
     # add ones in the constraint matrices for where slip is to be minimized/not allowed
-    faultConstraint = constrain(fault, "top_elements", "side_elements", dispMat, False)
 
-    # faultConstraint = constrain(fault,"side_elements", "", dispMat, False) # ignore top constraint
+    if (config["constraint"]["noTopConstraint"]):
+        faultConstraint = constrain(fault,"side_elements", "", dispMat, False) # ignore top constraint
+    else:
+        faultConstraint = constrain(fault, "top_elements", "side_elements", dispMat, False)
 
     # CMI element indicies need to be shifted by the number of fault elements
     shift = 2*len(fault["lon1"]) # two not three because tensile col has already been removed from fault elements
@@ -187,37 +191,37 @@ def main() :
         # ### PERFORM INVERSION ###
         estSlip, predDisp = runInversion(assembledMat, dispMat, weights, dataVector)
 
-        with open('estSlip.npy', 'wb') as f:
+        with open(config["results"]["outputDir"]+'/estSlip.npy', 'wb') as f:
             np.save(f, estSlip)
-        with open('predDisp.npy', 'wb') as f:
+        with open(config["results"]["outputDir"]+'/predDisp.npy', 'wb') as f:
             np.save(f, predDisp)
 
-    if (args.afterslipReinvert) :
-        newGps = removeFaultContribution(gps, estSlip, dispMat, allElemBegin)
-        # create new disp mat with only the cmi, ignoring the fault
+    # if (args.afterslipReinvert) :
+    #     newGps = removeFaultContribution(gps, estSlip, dispMat, allElemBegin)
+    #     # create new disp mat with only the cmi, ignoring the fault
 
-        # 0 shift because no fault elements
-        horizConstraint = constrain(horiz, "far_west", "far_north", horizDispMat, True)
-        newAssembledMat = np.vstack([horizDispMat, horizSmoothingMat, horizConstraint]) # stick constraint array as 3rd argument
+    #     # 0 shift because no fault elements
+    #     horizConstraint = constrain(horiz, "far_west", "far_north", horizDispMat, True)
+    #     newAssembledMat = np.vstack([horizDispMat, horizSmoothingMat, horizConstraint]) # stick constraint array as 3rd argument
 
-        newSmoothingWeights = [cmiSmoothing, config["constraint"]["cmiEdge"]] 
+    #     newSmoothingWeights = [cmiSmoothing, config["constraint"]["cmiEdge"]] 
 
-        # Assemble weighting vector
-        # Allocate space for data vector
-        newDataVector = np.zeros((np.shape(newAssembledMat)[0], 1)) # by default, the rows corresponding to constraint array are initialized as zeros
-        # Vector of displacements
-        newDispArray = np.array([newGps.east_vel, newGps.north_vel, newGps.up_vel]).reshape((3,-1)).T.copy()
-        newDataVector[0:np.size(newDispArray)] = newDispArray.flatten().reshape(-1,1)
+    #     # Assemble weighting vector
+    #     # Allocate space for data vector
+    #     newDataVector = np.zeros((np.shape(newAssembledMat)[0], 1)) # by default, the rows corresponding to constraint array are initialized as zeros
+    #     # Vector of displacements
+    #     newDispArray = np.array([newGps.east_vel, newGps.north_vel, newGps.up_vel]).reshape((3,-1)).T.copy()
+    #     newDataVector[0:np.size(newDispArray)] = newDispArray.flatten().reshape(-1,1)
 
-        newWeights = assembleWeights(0, newAssembledMat, newDispArray, newSmoothingWeights, [0,allElemBegin[1]], [allElemBegin[1], allElemBegin[1]+len(horizConstraint[0:,])])
+    #     newWeights = assembleWeights(0, newAssembledMat, newDispArray, newSmoothingWeights, [0,allElemBegin[1]], [allElemBegin[1], allElemBegin[1]+len(horizConstraint[0:,])])
 
-        # re run the inversion but now only for cmi 
-        determinant = np.linalg.det(newAssembledMat.T * newWeights.T @ newAssembledMat)
-        if np.isclose(determinant, 0):
-            print(determinant)
-            print("Matrix is singular or nearly singular.")
-        else:
-            estSlip, predDisp = runInversion(newAssembledMat, horizDispMat, newWeights, newDataVector)
+    #     # re run the inversion but now only for cmi 
+    #     determinant = np.linalg.det(newAssembledMat.T * newWeights.T @ newAssembledMat)
+    #     if np.isclose(determinant, 0):
+    #         print(determinant)
+    #         print("Matrix is singular or nearly singular.")
+    #     else:
+    #         estSlip, predDisp = runInversion(newAssembledMat, horizDispMat, newWeights, newDataVector)
     
 
     # # VISUALIZE RESULTS
@@ -227,7 +231,7 @@ def main() :
     vecScale2 = 1000 # scaling for comparing between observed and calc 2 yrs
 
     slipDist(estSlip, gps, fault, horiz, vecScale, config)
-    # # calls plotRatio
+    # calls plotRatio
     displacements(dispMat, allElemBegin, estSlip, predDisp, gps, vecScale, config)
     afterslip(estSlip=estSlip, fault=fault, config=config)
     
@@ -238,7 +242,7 @@ def main() :
 
     numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, horiz, config)
 
-    numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, horiz, config["results"]["saveData"])
+    saveConfig(config)
 
 if __name__ == "__main__":
     main()
