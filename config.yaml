@@ -13,11 +13,12 @@ cmi :
 constraint : 
   faultEdge : 1.0e+4
   cmiEdge : 5.0e+2
+  noTopConstraint: False
 
 inputs :
-  fault : "./mesh/japan.msh"
-  cmi : "./mesh/horiz.msh"               # written by meshCmi in prepareMeshes.py
-  gps : "./data/cumulative_disp_seafloor.txt"
+  fault : "./meshes/japan.msh"
+  # cmi : "./mesh/horiz.msh"               # written by meshCmi in prepareMeshes.py
+  gps : "./data/cumulative_disp.txt"
 
 results :
   saveFigures : True # true false figures saved to current directory
