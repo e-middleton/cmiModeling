@@ -4,7 +4,6 @@ from prepareMeshes import findContour, meshCmi, expandMesh
 from createMatrices import findEdgeElem, createDispSmoothMats, createIndexingLists, constrain
 import celeri
 from results import slipDist, displacements, residualPlot, numericalData, saveConfig, plotLikeDiao, afterslip, observedCalculated
-from results import slipDist, displacements, residualPlot, numericalData, saveConfig, plotLikeDiao, afterslip, observedCalculated
 import yaml, argparse
 from files_io import readMesh, readGPS
 from runInversion import runInversion, assembleWeights
