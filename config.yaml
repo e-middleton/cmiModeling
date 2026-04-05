@@ -6,10 +6,12 @@ smoothing :
   fault : 4.0e+14
   cmi : 1.0e+16
 
+# specifies dimensions of cmi for corners not connected to fault
 cmi :
   minLon : 125
   minLat : 34
 
+# weighting values for the constraint matrices
 constraint : 
   faultEdge : 1.0e+4
   cmiEdge : 5.0e+2
@@ -17,7 +19,6 @@ constraint :
 
 inputs :
   fault : "./meshes/japan.msh"
-  # cmi : "./mesh/horiz.msh"               # written by meshCmi in prepareMeshes.py
   gps : "./data/cumulative_disp.txt"
 
 results :
