@@ -1,12 +1,13 @@
 # Import libraries
 import numpy as np # Numerical analysis
-from prepareMeshes import findContour, meshCmi, expandMesh
-from createMatrices import findEdgeElem, createDispSmoothMats, createIndexingLists, constrain
 import celeri
-from results import slipDist, displacements, residualPlot, numericalData, saveConfig, plotLikeDiao, afterslip, observedCalculated
 import yaml, argparse
-from files_io import readMesh, readGPS
-from runInversion import runInversion, assembleWeights
+
+from src.prepareMeshes import findContour, meshCmi, expandMesh
+from src.createMatrices import findEdgeElem, createDispSmoothMats, createIndexingLists, constrain
+from src.results import  numericalData, plotFigs, saveConfig
+from src.files_io import readMesh, readGPS
+from src.runInversion import runInversion, assembleWeights
 
 ### SET MODEL CHOICES ###
 
@@ -25,7 +26,6 @@ def parseArgs() :
     parser.add_argument("--oldResults", action='store_true', help='Process the results of a past test.')
     parser.add_argument("--resultFolder", type=str, metavar='', help='Directory for the old test results.')
     parser.add_argument("--outputDir", metavar='', help="output directory")
-    
     return parser.parse_args()
 
 def main() :
@@ -59,7 +59,6 @@ def main() :
         config["results"]["outputDir"] = args.outputDir
     if (args.gpsFile) :
         config["inputs"]["gps"] = args.gpsFile
-
     print(config)
 
     # ###  READ IN SUBDUCTION ZONE MESH AND PARSE BEFORE USING IT TO CREATE A DEPTH CONTOUR ###
@@ -174,26 +173,19 @@ def main() :
         # ### PERFORM INVERSION ###
         estSlip, predDisp = runInversion(assembledMat, dispMat, weights, dataVector)
 
-        with open(config["results"]["outputDir"]+'/estSlip.npy', 'wb') as f:
+        with open(config["results"]["outputDir"]+'numpy/estSlip.npy', 'wb') as f:
             np.save(f, estSlip)
-        with open(config["results"]["outputDir"]+'/predDisp.npy', 'wb') as f:
+        with open(config["results"]["outputDir"]+'numpy/predDisp.npy', 'wb') as f:
             np.save(f, predDisp)
     
 
     # # VISUALIZE RESULTS
     vecScale = 1500 # typical vector scaling for 2 year data
-    vecScale2 = 1000 # scaling for comparing between observed and calc 2 yrs
 
-    slipDist(estSlip, gps, fault, horiz, vecScale, config)
-    # calls plotRatio
-    displacements(dispMat, allElemBegin, estSlip, predDisp, gps, vecScale, config)
-    afterslip(estSlip=estSlip, fault=fault, config=config)
-    
-    residualPlot(gps, predDisp, vecScale, config)
-    observedCalculated(predDisp, gps, vecScale2, estSlip, fault, config)
+    # plotted data
+    plotFigs(config, fault, horiz, gps, estSlip, predDisp, dispMat, vecScale, allElemBegin)
     
     # numerical data
-
     numericalData(estSlip, predDisp, dispMat, gps, allElemBegin, fault, horiz, config)
     saveConfig(config)
 
