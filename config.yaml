@@ -22,12 +22,19 @@ inputs :
   gps : "./data/cumulative_disp.txt"
 
 results :
-  saveFigures : True # true false figures saved to current directory
-  slipDist : True # slip distribution figure
-  dispSep : True  # displacements separated by component (from cmi, from fault)
-  allDisp : True # figure with total displacement, predicted and observed
-  ratioFig : True # ratio of cmi displacement to total displacement
-  residFig : True # displacement residuals figure
-  saveData: True # numerical data results
+  saveFigures : True        # true false figures saved to output directory
+  saveData: True            # numerical data results saved to output directory
+  saveNumpy: True           # saves numpy files for predDisp, estSlip, cmiDisp, and faultDisp
+
+  # specific figures
+  afterslip: True           # fault afterslip magnitude
+  dipSlip: True             # dip slip component of fault
+  slipLocation: True        # location of peak afterslip
+  slipDist : True           # slip distribution of both fault and cmi slip
+  dispByComponent : True    # displacements separated by source (from cmi, from fault)
+  totalDisp : True            # figure with total gps displacement, predicted and observed
+  residuals : True           # gps displacement residuals 
+
+  # organizational info
   testName : ""
   outputDir: ""
