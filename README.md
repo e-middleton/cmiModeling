@@ -17,7 +17,7 @@ conda env create -f environment.yml
 For creating old testing directories, the following can be run. It will use the default settings in `config.yaml` with overrides from command line arguments for each test.
 ```bash
 conda activate cmiModeling
-./scripts/createBatch1.sh
+./src/scripts/createBatch1.sh
 ```
 The full script takes roughly 24 hours on a Mac Sequoia 15.17.1 with a 3.6 GHz 8-Core Intel Core i9
 
