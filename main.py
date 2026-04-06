@@ -164,9 +164,9 @@ def main() :
     if (args.oldResults) :
         fileName = args.resultFolder
         
-        with open(fileName + '/estSlip.npy', 'rb') as f:
+        with open(fileName + '/numpy/estSlip.npy', 'rb') as f:
             estSlip = np.load(f)
-        with open(fileName + '/predDisp.npy', 'rb') as f:
+        with open(fileName + '/numpy/predDisp.npy', 'rb') as f:
             predDisp = np.load(f)
 
     else :
