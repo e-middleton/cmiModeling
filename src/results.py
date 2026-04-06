@@ -28,17 +28,15 @@ def slipDist(fault, cmi, estSlip, outputDir) :
     ymax = 48
 
     # dip slip on the CMI represents east-west motion, where east is negative and west is positive
+    # negated here to match geographic convention for the fault, east = pos, west = neg
     slip_type = 1 # 0 = strike slip 1 = dip slip, only for CMI, 2 (manual) is vertical/tensile
     end_idx = 2* len(fault["lon1"]) #end of fault elem beginning of cmi elem
-    slip_vals = [estSlip[slip_type:end_idx:2]/100, estSlip[slip_type+end_idx::3]/100] # dip slip values for fault and CMI, converted from cm to m
+    slip_vals = [estSlip[slip_type:end_idx:2]/100, -1*estSlip[slip_type+end_idx::3]/100] # dip slip values for fault and CMI, converted from cm to m
 
-    max_mag_f = np.max(np.abs(slip_vals[0]))
-    max_mag_h = np.max(np.abs(slip_vals[1]))
-    if max_mag_f > max_mag_h:
-        max_mag = max_mag_f
-    else:
-        max_mag = max_mag_h
-
+    maxF = np.max(np.abs(slip_vals[0]))
+    maxH = np.max(np.abs(slip_vals[1]))
+    max_mag = np.max([maxF, maxH])
+    
     both = {}
     both["points"] = np.vstack((fault["points"], cmi["points"]))
     shift_val = len(fault["points"][:,0])
@@ -54,12 +52,34 @@ def slipDist(fault, cmi, estSlip, outputDir) :
     cbar1 = fig.colorbar(rso, ax=ax, orientation='horizontal')
     ax.plot(coast.lon, coast.lat, color="k", linewidth=0.5)
     cbar1.set_label("Slip (m)")
-    ax.set(xlim=(xmin-2, xmax), ylim=(ymin, ymax), aspect='equal')
+    ax.set(xlim=(xmin, xmax), ylim=(ymin, ymax), aspect='equal')
     ax.title.set_text("Dip Slip") #graph 1
     ax.set_ylabel("Latitude")
     ax.set_xlabel("Longitude")
 
     plt.savefig(outputDir + 'images/slipDist.pdf') # save the figure only runs if called by plotFig
+    plt.close('all')
+
+    # same plot, but colorscale from cmi slip
+    print("now this figure!!!")
+    
+    fig, ax = plt.subplots( figsize=(6,6))
+    rso = ax.tripcolor(both["points"][:,0],
+                        both["points"][:,1], 
+                        both["verts"],
+                        facecolors=(np.vstack(((slip_vals[0], slip_vals[1])))).flatten(), 
+                        vmin=-np.max(np.abs(slip_vals[1])), vmax=np.max(np.abs(slip_vals[1]))) # colorbar based on cmi slip 
+    print("created figure")
+    cbar1 = fig.colorbar(rso, ax=ax, orientation='horizontal')
+    ax.plot(coast.lon, coast.lat, color="k", linewidth=0.5)
+    cbar1.set_label("Slip (m)")
+    ax.set(xlim=(xmin, xmax), ylim=(ymin, ymax), aspect='equal')
+    ax.title.set_text("Dip Slip") #graph 2
+    ax.set_ylabel("Latitude")
+    ax.set_xlabel("Longitude")
+
+    plt.savefig(outputDir + 'images/slipDistCmi.pdf') # save the figure only runs if called by plotFig
+    print(f"saving figure to {outputDir + 'images/FIGUREEEEE.pdf'}")
     plt.close('all')
 
     return
