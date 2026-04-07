@@ -61,7 +61,6 @@ def slipDist(fault, cmi, estSlip, outputDir) :
     plt.close('all')
 
     # same plot, but colorscale from cmi slip
-    print("now this figure!!!")
     
     fig, ax = plt.subplots( figsize=(6,6))
     rso = ax.tripcolor(both["points"][:,0],
@@ -69,7 +68,6 @@ def slipDist(fault, cmi, estSlip, outputDir) :
                         both["verts"],
                         facecolors=(np.vstack(((slip_vals[0], slip_vals[1])))).flatten(), 
                         vmin=-np.max(np.abs(slip_vals[1])), vmax=np.max(np.abs(slip_vals[1]))) # colorbar based on cmi slip 
-    print("created figure")
     cbar1 = fig.colorbar(rso, ax=ax, orientation='horizontal')
     ax.plot(coast.lon, coast.lat, color="k", linewidth=0.5)
     cbar1.set_label("Slip (m)")
@@ -79,7 +77,6 @@ def slipDist(fault, cmi, estSlip, outputDir) :
     ax.set_xlabel("Longitude")
 
     plt.savefig(outputDir + 'images/slipDistCmi.pdf') # save the figure only runs if called by plotFig
-    print(f"saving figure to {outputDir + 'images/FIGUREEEEE.pdf'}")
     plt.close('all')
 
     return
@@ -167,8 +164,8 @@ def plotSlipLocation(fault, estSlip, outputDir):
     fig, ax = plt.subplots(figsize=(5,6))
     custom_colors = ['lightsteelblue','lightsteelblue', 'royalblue', 'blue']
     cmap = colors.ListedColormap(custom_colors)
-    maxSlip = np.max(slip)
-    bounds = [0, maxSlip-1, maxSlip-1, maxSlip-0.1, maxSlip+0.1] 
+    maxSlip = np.max(np.abs(slip))
+    bounds = [0, np.max([maxSlip-1,0]),np.max([maxSlip-1,0]), np.max([maxSlip-0.1,0]), maxSlip+0.1] 
     norm = colors.BoundaryNorm(bounds, cmap.N)
     rso2 = ax.tripcolor(fault["points"][:,0], fault["points"][:,1], fault["verts"], facecolors=(slip).flatten(), cmap=cmap,norm=norm)
     cbar2 = fig.colorbar(rso2, ax=ax, boundaries=bounds,orientation='vertical')
