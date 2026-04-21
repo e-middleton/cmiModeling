@@ -420,15 +420,6 @@ def plotFigs(config, fault, cmi, gps, estSlip, predDisp, dispMat, vecScale, allE
 
 def maxSlipMag(fault_slip, cmi_slip):
     ''' gets the maximum magnitude of the total slip magnitude per element of both meshes'''
-    # dip_slip_vals = np.array(estSlip[1:allElemBegin[1]:2]/100) # dip slip values for fault only
-    # strike_slip_vals = np.array(estSlip[0:allElemBegin[1]:2]/100) # strike slip values for fault only
-    # fault_slip = np.sqrt(np.square(dip_slip_vals) + np.square(strike_slip_vals))
-    # maxFaultMag = np.max(np.abs(fault_slip))
-
-    # cmi_dip_slip_vals = np.array(estSlip[allElemBegin[1]+1:allElemBegin[2]:3]/100) # dip slip values for cmi only
-    # cmi_strike_slip_vals = np.array(estSlip[allElemBegin[1]:allElemBegin[2]:3]/100) # strike slip values for cmi only
-    # cmi_slip = np.sqrt(np.square(cmi_dip_slip_vals) + np.square(cmi_strike_slip_vals))
-    
     maxFaultMag = np.max(np.abs(fault_slip))
     maxCmiMag = np.max(np.abs(cmi_slip))
 
@@ -466,20 +457,8 @@ def calcMoment(faultSlip, cmiSlip, fault, cmi):
 
     rigidity = 3e10 #N / m^2 (is this the same though for the CMI at depth?)
 
-    # allElemBegin[1] corresponds to the end of the fault elements and beginning of the cmi elements
-    # calc slip mag
-    # fault_d_slip = np.square(estSlip[1:allElemBegin[1]:2]) # one for dip slip
-    # fault_s_slip = np.square(estSlip[0:allElemBegin[1]:2]) # zero for strike slip
-    # hstack because array shapes are single column many rows, 
-    # axis=1 because summing across rows (2 elem each row, [strike slip^2, dip slip^2])
-    # faultSlip = np.sqrt(np.sum(np.hstack((fault_d_slip, fault_s_slip)), axis=1))/100 # convert cm -> m
-
     faultMoment = rigidity * (fault["area"]) * faultSlip.flatten() # flatten fault slip to match fault["area"] dimensions
     faultTotalMoment = np.sum(faultMoment) # in Nm
-
-    # cmi_d_slip = np.square(estSlip[1+allElemBegin[1]::3])
-    # cmi_s_slip = np.square(estSlip[0+allElemBegin[1]::3])
-    # cmiSlip = np.sqrt(np.sum(np.hstack((cmi_d_slip, cmi_s_slip)), axis=1))/100
 
     cmiMoment = rigidity * (cmi["area"]) * cmiSlip.flatten()
     cmiTotalMoment = np.sum(cmiMoment)
