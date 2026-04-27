@@ -157,6 +157,42 @@ def constraintMatrix(index, dispMat, containsTensile, shift=0) :
 # and return those rows in an array to behave as indices
 # elem is a string for the dictionary key
 def findConstraintRows(mesh, elem, elem2="") :
+    # if (elem == "edge_elements"):
+    #     mesh_elem = np.logical_or(np.logical_or(mesh["side_elements"], mesh["top_elements"]), mesh["bot_elements"])
+    #     # find the rows of points that touch the max depth value (min val bc negative)
+    #     deep_indices = np.isclose(mesh["points"][:,2], np.full_like(len(mesh["points"]),-60), atol=5)
+    #     deep_indices = np.nonzero(deep_indices)
+    #     # find the vertices / elements that correspond to those max depth points
+    #     deep_elem = np.isin(mesh["verts"], deep_indices) 
+    #     deep_elem = deep_elem.sum(axis=1)
+    #     deep_elem = np.logical_and(mesh_elem, deep_elem) # make sure they're edge elements
+    #     deep_elem_idx = np.nonzero(deep_elem)
+    #     # fill in the dictionary section of "edge elements" to be everything except the bottom edge
+    #     col = np.full((len(deep_elem[0:,])), False)
+    #     col[deep_elem_idx] = True
+    #     col = col.astype(int)
+    #     col = mesh_elem ^ col # xor of all edge elements and bottom elements
+
+    #     # create a plot of constrained elements
+    #     import matplotlib.pyplot as plt
+    #     import pandas as pd
+    #     colors = col
+    #     coast = pd.read_csv("./data/coastline.csv")
+    #     fig, ax = plt.subplots(figsize=(5,6))
+    #     rso = ax.tripcolor(mesh["points"][:,0],
+    #                         mesh["points"][:,1], 
+    #                         mesh["verts"],
+    #                         facecolors=(colors).flatten(), 
+    #                         vmin=0, vmax=1)
+    #     ax.plot(coast.lon, coast.lat, color="k", linewidth=0.5)
+    #     ax.set(xlim=(139,147), ylim=(34, 44), aspect='equal')
+    #     ax.title.set_text("Fault 'side' elements") #graph 1
+    #     ax.set_ylabel("Latitude")
+    #     ax.set_xlabel("Longitude")
+    #     plt.savefig( "./tmp2/images/constrainedElem.pdf")
+
+    #     mesh["edge_elements"] = col
+
     index = np.nonzero(mesh[elem])[0].reshape(-1,1)
 
     if (elem2 != "") :
