@@ -51,7 +51,7 @@ to run an entire testing directory for reformatting images. It will not rerun th
 
 
 ## Output Processing
-The notebook `parseResults.ipynb` can be used to find model parameter combinations that match certain criteria based on previously published result in the Paper Matching section, or generic processing can be done via the interactive plotting or All Models Plotting sections.
+The notebook `parseResults.ipynb` can be used to find model parameter combinations that match certain criteria based on previously published results in the Paper Matching section, or generic processing can be done via the Interactive plotting or All Models Plotting sections.
 
 The notebook expects output directories formatted in the style specified by `createOutputs.sh` with all testing combinations present.
 
