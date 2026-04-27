@@ -32,7 +32,7 @@ def main() :
     args = parseArgs()
 
     if (args.oldResults) :
-        with open(args.resultFolder + '/configSettings.yaml', 'r') as file:
+        with open(args.resultFolder + 'configSettings.yaml', 'r') as file:
             config = yaml.safe_load(file)
     else: 
         with open(args.config, "r") as file :
@@ -124,6 +124,7 @@ def main() :
         faultConstraint = constrain(fault,"side_elements", "", dispMat, False) # ignore top constraint
     else:
         faultConstraint = constrain(fault, "top_elements", "side_elements", dispMat, False)
+        # faultConstraint = constrain(fault, "edge_elements", "", dispMat, False)
 
     # CMI element indicies need to be shifted by the number of fault elements
     shift = 2*len(fault["lon1"]) # two not three because tensile col has already been removed from fault elements
