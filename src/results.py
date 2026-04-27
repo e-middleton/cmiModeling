@@ -1,11 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colors
-from matplotlib import colors
 import pandas as pd
 import json
 import yaml
 import matplotlib as mpl
+import celeri
 
 # global attributes
 coast = pd.read_csv("./data/coastline.csv")
@@ -108,7 +108,53 @@ def afterslip(fault_slip_mag, fault, outputDir):
     ax.set_ylabel("Latitude")
     ax.set_xlabel("Longitude")
     plt.savefig(outputDir + "images/afterslip.pdf")
-    plt.close('all')
+
+    # Side element locations
+
+    # celeri.mesh._compute_mesh_edge_elements(fault)
+    # colors = np.array(fault["side_elements"]).astype(int)
+    # fig, ax = plt.subplots(figsize=(5,6))
+    # rso = ax.tripcolor(fault["points"][:,0],
+    #                     fault["points"][:,1], 
+    #                     fault["verts"],
+    #                     facecolors=(colors).flatten(), 
+    #                     vmin=0, vmax=1)
+    # ax.plot(coast.lon, coast.lat, color="k", linewidth=0.5)
+    # ax.set(xlim=(139,147), ylim=(ymin, 44), aspect='equal')
+    # ax.title.set_text("Fault 'side' elements") #graph 1
+    # ax.set_ylabel("Latitude")
+    # ax.set_xlabel("Longitude")
+    # plt.savefig(outputDir + "images/sideElem.pdf")
+
+    # colors = np.array(fault["top_elements"]).astype(int)
+    # fig, ax = plt.subplots(figsize=(5,6))
+    # rso = ax.tripcolor(fault["points"][:,0],
+    #                     fault["points"][:,1], 
+    #                     fault["verts"],
+    #                     facecolors=(colors).flatten(), 
+    #                     vmin=0, vmax=1)
+    # ax.plot(coast.lon, coast.lat, color="k", linewidth=0.5)
+    # ax.set(xlim=(139,147), ylim=(ymin, 44), aspect='equal')
+    # ax.title.set_text("Fault 'top' elements") #graph 1
+    # ax.set_ylabel("Latitude")
+    # ax.set_xlabel("Longitude")
+    # plt.savefig(outputDir + "images/topElem.pdf")
+
+    # colors = np.array(fault["bot_elements"]).astype(int)
+    # fig, ax = plt.subplots(figsize=(5,6))
+    # rso = ax.tripcolor(fault["points"][:,0],
+    #                     fault["points"][:,1], 
+    #                     fault["verts"],
+    #                     facecolors=(colors).flatten(), 
+    #                     vmin=0, vmax=1)
+    # ax.plot(coast.lon, coast.lat, color="k", linewidth=0.5)
+    # ax.set(xlim=(139,147), ylim=(ymin, 44), aspect='equal')
+    # ax.title.set_text("Fault 'bottom' elements") #graph 1
+    # ax.set_ylabel("Latitude")
+    # ax.set_xlabel("Longitude")
+    # plt.savefig(outputDir + "images/bottomElem.pdf")
+
+    # plt.close('all')
 
 
 def plotDipSlip(fault, fault_d_slip, outputDir):
@@ -155,8 +201,23 @@ def plotSlipLocation(fault, fault_slip_mag, outputDir):
     ax.plot(coast.lon, coast.lat, color="k", linewidth=0.5)
     ax.set(xlim=(xmin, xmax), ylim=(ymin, ymax), aspect='equal')
     ax.title.set_text("Max Slip Location") #graph 2
-
     plt.savefig(outputDir + "images/maxSlipLocation.pdf")
+
+    fig, ax = plt.subplots(figsize=(5,6))
+    custom_colors = ['lightsteelblue', 'cornflowerblue', 'royalblue', 'mediumblue'] #, 'midnightblue']
+    cmap = colors.ListedColormap(custom_colors)
+
+    cmap = mpl.colormaps['Blues'].resampled(4) # 4 discrete bins for colorbar
+
+    # norm = colors.BoundaryNorm(bounds, cmap.N)
+    rso2 = ax.tripcolor(fault["points"][:,0], fault["points"][:,1], fault["verts"], facecolors=(fault_slip_mag).flatten(), cmap=cmap, edgecolors='lightgray', linewidth=0.01)
+    cbar2 = fig.colorbar(rso2, ax=ax,orientation='vertical')
+    cbar2.set_label('slip magnitude (m)')
+    ax.plot(coast.lon, coast.lat, color="k", linewidth=0.5)
+    ax.set(xlim=(139, 145), ylim=(35, 42), aspect='equal')
+    ax.title.set_text("Max Slip Location") #graph 2
+
+    plt.savefig(outputDir + "images/maxSlipLocation_yamagiwa.pdf")
     return
 
 
@@ -175,20 +236,22 @@ def plotDispByComponent(dispMat, allElemBegin, estSlip, gps, outputDir) :
     # coastline plotting
     ax[0].plot(coast.lon, coast.lat, color="k", linewidth=0.5)
     ax[1].plot(coast.lon, coast.lat, color="k", linewidth=0.5)
+    ax[0].fill(coast.lon, coast.lat, color='lightgray')
+    ax[1].fill(coast.lon, coast.lat, color="lightgray")
 
     # plot the component of horizontal displacement from afterslip
     ax[0].quiver(gps.lon, gps.lat, fault_disp[0::3], fault_disp[1::3], 
-                 scale=miniVecScale, color='b', label="fault", 
+                 scale=miniVecScale, color='mediumblue', label="fault", 
                  headlength=headLength, headaxislength=headAxisLength, headwidth=headWidth, width=arrowWidth, 
                  lw=0.2, ec='k',)
     
     # plot the component of horizontal displacement from VER / cmi slip
     Q2 = ax[0].quiver(gps.lon, gps.lat, cmi_disp[0::3], cmi_disp[1::3], 
-                      scale=miniVecScale, color='yellow', label="cmi", 
-                      headlength=headLength, headaxislength=headAxisLength, headwidth=headWidth, width=arrowWidth2, 
+                      scale=miniVecScale, color="gold", label="cmi", 
+                      headlength=headLength, headaxislength=headAxisLength, headwidth=headWidth-1, width=arrowWidth-0.0005, 
                       lw=0.2, ec='k',)
     # quiver based off of cmi disp, but same units as afterslip so it should be alright
-    ax[0].quiverkey(Q2, X=0.3, Y=0.8, U=30, label="30 cm", labelpos='N', color='b')
+    ax[0].quiverkey(Q2, X=0.3, Y=0.8, U=30, label="30 cm", labelpos='N', color='mediumblue')
     ax[0].set_ylim([34, 42])
     ax[0].set_xlim([136, 144])
     ax[0].set_title("Horizontal contributions")
@@ -199,16 +262,16 @@ def plotDispByComponent(dispMat, allElemBegin, estSlip, gps, outputDir) :
     # plot the component of vertical displacement from afterslip
     # note the vector scale is dividied by 5, so shorter displacements appear larger (inverse)
     ax[1].quiver(gps.lon, gps.lat, ogVec, fault_disp[2::3], 
-                 scale=miniVecScale/5, color='b', label="fault", 
+                 scale=miniVecScale/5, color='mediumblue', label="fault", 
                  headlength=headLength, headaxislength=headAxisLength, headwidth=headWidth, width=arrowWidth, 
                  lw=0.2, ec='k',)
     
     # plot the component of vertical displacement from VER / cmi
     Q3 = ax[1].quiver(gps.lon, gps.lat, ogVec, cmi_disp[2::3], 
-                      scale=miniVecScale/5, color='yellow', label="cmi", 
-                      headlength=headLength, headaxislength=headAxisLength, headwidth=headWidth, width=arrowWidth2, 
+                      scale=miniVecScale/5, color='gold', label="cmi", 
+                      headlength=headLength, headaxislength=headAxisLength, headwidth=headWidth-1, width=arrowWidth-0.0005, 
                       lw=0.2, ec='k',)
-    ax[1].quiverkey(Q3, X=0.3, Y=0.8, U=10, label="10 cm", labelpos='N', color='b')
+    ax[1].quiverkey(Q3, X=0.3, Y=0.8, U=10, label="10 cm", labelpos='N', color='mediumblue')
     ax[1].set_ylim([34, 42])
     ax[1].set_xlim([136, 144])
     ax[1].set_title("Vertical contribution")
@@ -219,6 +282,7 @@ def plotDispByComponent(dispMat, allElemBegin, estSlip, gps, outputDir) :
 
     fig, ax = plt.subplots( figsize=(6,5))
     ax.plot(coast.lon, coast.lat, color="k", linewidth=0.5)
+    ax.fill(coast.lon, coast.lat, color='darkgray', alpha=0.5)
 
     # plot the component of horizontal displacement from afterslip against total
     
@@ -246,42 +310,90 @@ def plotDispByComponent(dispMat, allElemBegin, estSlip, gps, outputDir) :
     fig, ax = plt.subplots(1, 2, figsize=(10,5))
     ax[0].plot(coast.lon, coast.lat, color="k", linewidth=0.5)
     ax[1].plot(coast.lon, coast.lat, color="k", linewidth=0.5)
+    ax[0].fill(coast.lon, coast.lat, color="#986E3B", alpha=0.5)
+    ax[1].fill(coast.lon, coast.lat, color="#986E3B", alpha=0.5)
 
     # plot the component of horizontal displacement from afterslip against total
     
     # plot the component of horizontal displacement from observed
-    Q2 = ax[0].quiver(gps.lon, gps.lat, gps.east_vel, gps.north_vel, 
+    Q2 = ax[1].quiver(gps.lon, gps.lat, gps.east_vel, gps.north_vel, 
                       scale=miniVecScale*2, color='r', label="observed", 
                       headlength=headLength, headaxislength=headAxisLength, headwidth=headWidth, width=arrowWidth, 
                       lw=0.2, ec='k',)
-    ax[0].quiver(gps.lon, gps.lat, fault_disp[0::3], fault_disp[1::3], 
+    ax[1].quiver(gps.lon, gps.lat, fault_disp[0::3], fault_disp[1::3], 
                  scale=miniVecScale*2, color='cyan', label="fault", 
                  headlength=headLength, headaxislength=headAxisLength, headwidth=headWidth-1, width=arrowWidth-0.0005, 
                  lw=0.2, ec='k',)
     
     # quiver based off of cmi disp, but same units as afterslip so it should be alright
-    ax[0].quiverkey(Q2, X=0.3, Y=0.8, U=100, label="100 cm", labelpos='N', color='r')
-    ax[0].set_ylim([34, 42])
-    ax[0].set_xlim([136, 144])
-    ax[0].set_title("Horizontal afterslip contributions")
+    ax[1].quiverkey(Q2, X=0.2, Y=0.7, U=100, label="100 cm", labelpos='N', color='r')
+    ax[1].set_ylim([34, 42])
+    ax[1].set_xlim([136, 144])
+    ax[1].set_title("Horizontal afterslip contributions")
 
-    Q3 = ax[1].quiver(gps.lon, gps.lat, gps.east_vel, gps.north_vel, 
+    Q3 = ax[0].quiver(gps.lon, gps.lat, gps.east_vel, gps.north_vel, 
                       scale=miniVecScale*2, color='r', label="observed", 
                       headlength=headLength, headaxislength=headAxisLength, headwidth=headWidth, width=arrowWidth, 
                       lw=0.2, ec='k',)
-    ax[1].quiver(gps.lon, gps.lat, cmi_disp[0::3], cmi_disp[1::3], 
+    ax[0].quiver(gps.lon, gps.lat, cmi_disp[0::3], cmi_disp[1::3], 
                  scale=miniVecScale*2, color='yellow', label="cmi", 
                  headlength=headLength, headaxislength=headAxisLength, headwidth=headWidth-1, width=arrowWidth-0.0005, 
                  lw=0.2, ec='k',)
     
     # quiver based off of cmi disp, but same units as afterslip so it should be alright
-    ax[1].quiverkey(Q3, X=0.3, Y=0.8, U=100, label="100 cm", labelpos='N', color='r')
-    ax[1].set_ylim([34, 42])
-    ax[1].set_xlim([136, 144])
-    ax[1].set_title("Horizontal cmi contributions")
+    ax[0].quiverkey(Q3, X=0.2, Y=0.7, U=100, label="100 cm", labelpos='N', color='r')
+    ax[0].set_ylim([34, 42])
+    ax[0].set_xlim([136, 144])
+    ax[0].set_title("Horizontal cmi contributions")
+    ax[1].legend()
+    ax[0].legend()
 
     plt.savefig(outputDir + 'images/dispByComponent_FreedHoriz.pdf')
     plt.close('all')
+
+    # yamagiwa match
+    fig, ax = plt.subplots(1, 2, figsize=(10,5))
+    ax[0].plot(coast.lon, coast.lat, color="k", linewidth=0.5)
+    ax[1].plot(coast.lon, coast.lat, color="k", linewidth=0.5)
+    ax[0].fill(coast.lon, coast.lat, color='lightgray', alpha=0.5)
+    ax[1].fill(coast.lon, coast.lat, color="lightgray", alpha=0.5)
+
+    # plot the component of horizontal displacement from afterslip against total
+    
+    # plot the component of horizontal displacement from observed
+    Q2 = ax[0].quiver(gps.lon, gps.lat, gps.east_vel, gps.north_vel, 
+                      scale=miniVecScale*2, color='k', label="observed", 
+                      headlength=headLength, headaxislength=headAxisLength, headwidth=headWidth-1, width=arrowWidth-0.0005, 
+                      lw=0.2, ec='k',)
+    ax[0].quiver(gps.lon, gps.lat, cmi_disp[0::3], cmi_disp[1::3], 
+                 scale=miniVecScale*2, color='r', label="cmi", 
+                 headlength=headLength, headaxislength=headAxisLength, headwidth=headWidth, width=arrowWidth, 
+                 lw=0.2, ec='r',)
+    
+    # quiver based off of gps disp, but same units as afterslip so it should be alright
+    ax[0].quiverkey(Q2, X=0.8, Y=0.1, U=20, label="20 cm", labelpos='N', color='k')
+    ax[0].set_ylim([35, 42])
+    ax[0].set_xlim([139, 145])
+    ax[0].set_title("Horizontal CMI Contributions")
+
+    Q3 = ax[1].quiver(gps.lon, gps.lat, ogVec, gps.up_vel, 
+                      scale=miniVecScale*0.25, color='k', label="observed", 
+                      headlength=headLength, headaxislength=headAxisLength, headwidth=headWidth-1, width=arrowWidth-0.0005, 
+                      lw=0.2, ec='k',)
+    ax[1].quiver(gps.lon, gps.lat, ogVec, cmi_disp[2::3], 
+                 scale=miniVecScale*0.25, color='r', label="cmi", 
+                 headlength=headLength, headaxislength=headAxisLength, headwidth=headWidth, width=arrowWidth, 
+                 lw=0.2, ec='r',)
+    
+    # quiver based off of cmi disp, but same units as afterslip so it should be alright
+    ax[1].quiverkey(Q3, X=0.8, Y=0.1, U=3, label="3 cm", labelpos='N', color='k')
+    ax[1].set_ylim([35, 42])
+    ax[1].set_xlim([139, 145])
+    ax[1].set_title("Vertical CMI Contributions")
+
+    plt.savefig(outputDir + 'images/dispByComponent_yamagiwa.pdf')
+    plt.close('all')
+    
     return
 
 def plotTotalDisp(predDisp, gps, vecScale, outputDir):
@@ -526,8 +638,7 @@ def saveConfig(config):
 def rakeCalc(fault_d_slip, fault_s_slip, fault_slip_mag, cmi_d_slip, cmi_s_slip, cmi_slip_mag) :
     '''calculates the average rake value for the cmi and fault
     using the slip magnitude to weight the rake value of the given element'''
-
-    # cmiRake = np.rad2deg(np.arctan2(cmi_d_slip.flatten(), cmi_s_slip.flatten())) # (left lateral = 0 rake)
+    
     faultRake = np.rad2deg(np.arctan2(fault_d_slip.flatten(), fault_s_slip.flatten()))
     cmiRake = np.rad2deg(np.arctan2(cmi_d_slip.flatten(), cmi_s_slip.flatten())) # (left lateral = 0 rake)
 
@@ -573,97 +684,6 @@ def contributionsPercent(predDisp, dispMat, estSlip, allElemBegin, outputDir) :
 
 
 ##### ----- currently unused ----- #####
-
-
-# method to output plots similar in style to Diao et al.
-# observed displacement, cal_afterslip, cal_cmi, residual (horiz)
-def plotLikeDiao(gps, predDisp, vectorLength, vecScale, dispMat, estSlip, allElemBegin, numDays, config) :
-    saveFigures = config["results"]["saveFigures"]
-    ratioFig = config["results"]["ratioFig"]
-    outputDir = config["results"]["outputDir"]
-
-    residuals = np.empty((len(gps.lon), 3))
-    actual = np.hstack((np.array(gps.east_vel).reshape(-1,1), np.array(gps.north_vel).reshape(-1,1), np.array(gps.up_vel).reshape(-1,1)))
-
-    # predicted / calculated values
-    calc_east = predDisp[0::3].flatten()
-    calc_north = predDisp[1::3].flatten()
-    calc_up = predDisp[2::3].flatten()
-
-    residuals[:,0] = actual[:,0] - calc_east
-    residuals[:,1] = actual[:,1] - calc_north
-    residuals[:,2] = actual[:,2] - calc_up
-
-    # square the components
-    east_disp = np.square(predDisp[0::3]).reshape(1,-1)
-    north_disp = np.square(predDisp[1::3]).reshape(1, -1)
-
-    # add together north and east disp, sum down column, take square root for magnitude of horiz disp
-    totalDisp = np.sqrt(np.sum(np.vstack((east_disp, north_disp)), axis=0))
-
-    # calc disp from cmi, beginning from the cmi elements to the end of the cmi elements
-    cmi_disp = dispMat[:, allElemBegin[1]:allElemBegin[2]].dot(estSlip[allElemBegin[1]:allElemBegin[2]]) 
-    cmi_e = np.square(cmi_disp[0::3]).reshape(1,-1) # square components
-    cmi_n = np.square(cmi_disp[1::3]).reshape(1,-1)
-    totalCmiDisp = np.sqrt(np.sum(np.vstack((cmi_e, cmi_n)), axis=0))
-
-    # fault disp
-    fault_disp = dispMat[:, allElemBegin[0]:allElemBegin[1]].dot(estSlip[allElemBegin[0]:allElemBegin[1]])
-
-    plotRatio(gps, totalCmiDisp, totalDisp, saveFigures, ratioFig)
-
-    fig, ax = plt.subplots(nrows=1, ncols=4, figsize=(22, 6), sharex=True, sharey=True)
-
-    arrowWidth = 0.004
-
-    # OBSERVED DISPLACEMENTS
-    Q= ax[0].quiver(gps.lon, gps.lat, gps.east_vel/numDays, gps.north_vel/numDays, scale_units="xy", scale=vecScale, color='k', label='observed', width=arrowWidth)
-    ax[0].quiverkey(Q, X = 0.3, Y=0.8, U=vectorLength, label='2 mm d-1',labelpos='N', color='k')
-    ax[0].plot(coast.lon, coast.lat, color="k", linewidth=0.5) # coastline
-    ax[0].set_title("Observed displacements (cm)")
-    ax[0].set_ylim([35, 41])
-    ax[0].set_xlim([135, 143])
-    ax[0].set_aspect('equal', adjustable='box')
-
-    # AFTERSLIP CONTRIBUTION # 
-
-    Q2 = ax[1].quiver(gps.lon, gps.lat, fault_disp[0::3]/numDays, fault_disp[1::3]/numDays, scale_units="xy", scale=vecScale, color='g', label="displacements from afterslip", width=arrowWidth)
-    ax[1].quiverkey(Q2, X=0.3, Y=0.8, U=vectorLength, label="2 mm d-1", labelpos='N', color='g')
-    ax[1].plot(coast.lon, coast.lat, color="k", linewidth=0.5) # coastline
-    ax[1].set_ylim([35, 41])
-    ax[1].set_xlim([135, 143])
-    ax[1].set_aspect('equal', adjustable='box')
-    ax[1].set_title("Calculated Afterslip")
-
-    # CMI CONTRIBUTION # 
-
-    Q3 = ax[2].quiver(gps.lon, gps.lat, cmi_disp[0::3]/numDays, cmi_disp[1::3]/numDays, scale_units="xy", scale=vecScale, color='b', label="displacements from cmi slip", width=arrowWidth)
-    ax[2].quiverkey(Q3, X=0.3, Y=0.8, U=vectorLength, label="2 mm d-1", labelpos='N', color='b')
-    ax[2].plot(coast.lon, coast.lat, color="k", linewidth=0.5) # coastline
-    ax[2].set_ylim([35, 41])
-    ax[2].set_xlim([135, 143])
-    ax[2].set_aspect('equal', adjustable='box')
-    ax[2].set_title("Calculated CMI slip")
-
-    
-    # RESIDUALS #
-
-    Q4 = ax[3].quiver(gps.lon, gps.lat, residuals[:,0]/numDays, residuals[:,1]/numDays, scale_units="xy", scale=vecScale, color='r', label="residuals", width=arrowWidth)
-    ax[3].quiverkey(Q4, X=0.3, Y=0.8, U=vectorLength, label="2 mm d-1", labelpos='N', color='r')
-    ax[3].plot(coast.lon, coast.lat, color="k", linewidth=0.5) # coastline
-    ax[3].set_ylim([35, 41])
-    ax[3].set_xlim([135, 143])
-    ax[3].set_aspect('equal', adjustable='box')
-    ax[3].set_title("Residual Displacements (horizontal)")
-    plt.xticks([136, 137, 138, 139, 140, 141, 142])  # Set label locations.
-
-    fig.subplots_adjust(wspace=0, hspace=0)
-
-    plt.savefig(outputDir + "diaoFormattedDisplacements.pdf")
-    plt.close('all')
-
-    return
-
 
 def observedCalculated(predDisp, gps, vecScale, estSlip, fault, config):
     outputDir = config["results"]["outputDir"]
