@@ -50,6 +50,11 @@ Running past results can additionally be done via
 to run an entire testing directory for reformatting images. It will not rerun the inversion, and the directory should be specified in the script. 
 
 
+## Output Processing
+The notebook `parseResults.ipynb` can be used to find model parameter combinations that match certain criteria based on previously published result in the Paper Matching section, or generic processing can be done via the interactive plotting or All Models Plotting sections.
+
+The notebook expects output directories formatted in the style specified by `createOutputs.sh` with all testing combinations present.
+
 ## Data Sources
 GPS data in cumulative_disp.txt is from the first 2 years after the 2011 Tohoku-oki earthquake, from Hu et al. [doi:10.1186/1880-5981-66-106](https://link.springer.com/article/10.1186/1880-5981-66-106) in the Electronic Supplementary Material section
 
