@@ -384,7 +384,7 @@ dependencies:
   - zstandard=0.23.0=py312hea69d52_2
   - zstd=1.5.7=h6491c7d_2
   - pip:
-      - celeri==0.0.2.post1.dev300+g6719c25
+      - celeri
       - gmsh==4.14.0
       - ismember==1.1.0
       - okada-wrapper==24.6.15
